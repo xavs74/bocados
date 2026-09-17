@@ -1,0 +1,83 @@
+import Dexie, { type EntityTable } from 'dexie'
+import seedFoods from './data/seedFoods.json'
+import type { Goals, Nutrients } from './lib/nutrition'
+
+export interface Serving {
+  label: string
+  grams: number
+}
+
+export interface Amount {
+  quantity: number
+  /** A serving label from the food, or undefined for grams. */
+  serving?: Serving
+}
+
+/** Nutrients are per 100 g. */
+export interface Food extends Nutrients {
+  id: number
+  name: string
+  servings: Serving[]
+  lastUsed?: number
+  lastAmount?: Amount
+}
+
+export const MEALS = ['breakfast', 'lunch', 'snack', 'dinner'] as const
+export type Meal = (typeof MEALS)[number]
+
+export const MEAL_LABEL: Record<Meal, string> = {
+  breakfast: 'Breakfast',
+  lunch: 'Lunch',
+  snack: 'Snack',
+  dinner: 'Dinner',
+}
+
+/**
+ * A logged food. Keeps a copy of the food's name and values so editing or
+ * deleting the food later doesn't rewrite past days.
+ */
+export interface Entry {
+  id: number
+  date: string
+  meal: Meal
+  foodId: number
+  name: string
+  per100: Nutrients
+  grams: number
+  amount: Amount
+  createdAt: number
+}
+
+export interface Setting {
+  key: string
+  value: unknown
+}
+
+// Starting point taken from the spreadsheet: 1,700 kcal, with its target grams
+// (130 g carbs, 234.5 g protein, 69.5 g fat) expressed as a calorie split.
+export const DEFAULT_GOALS: Goals = { kcal: 1700, split: { carbs: 25, protein: 45, fat: 30 } }
+
+export class BocadoDB extends Dexie {
+  foods!: EntityTable<Food, 'id'>
+  entries!: EntityTable<Entry, 'id'>
+  settings!: EntityTable<Setting, 'key'>
+
+  constructor() {
+    super('bocado')
+    this.version(1).stores({
+      foods: '++id, name, lastUsed',
+      entries: '++id, date, foodId',
+      settings: 'key',
+    })
+    this.on('populate', async (tx) => {
+      await tx.table('foods').bulkAdd(seedFoods)
+      await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
+    })
+  }
+}
+
+export const db = new BocadoDB()
+
+export function gramsOf(amount: Amount): number {
+  return amount.serving ? amount.quantity * amount.serving.grams : amount.quantity
+}

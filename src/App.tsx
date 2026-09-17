@@ -1,0 +1,113 @@
+import { useEffect, useState, type ReactNode } from 'react'
+import { Foods } from './screens/Foods'
+import { Goals } from './screens/Goals'
+import { Today } from './screens/Today'
+
+const TABS = ['today', 'foods', 'goals'] as const
+type Tab = (typeof TABS)[number]
+
+function tabFromHash(): Tab {
+  const t = location.hash.replace('#/', '') as Tab
+  return TABS.includes(t) ? t : 'today'
+}
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>(tabFromHash)
+
+  useEffect(() => {
+    const onHash = () => setTab(tabFromHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [tab])
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <a className="brand" href="#/today">
+          <Logo />
+          <span>Bocado</span>
+        </a>
+        <nav className="nav" aria-label="Main">
+          <NavLink tab="today" current={tab} icon={<TodayIcon />}>
+            Today
+          </NavLink>
+          <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
+            Foods
+          </NavLink>
+          <NavLink tab="goals" current={tab} icon={<GoalsIcon />}>
+            Goals
+          </NavLink>
+        </nav>
+      </header>
+      <main className="main">
+        {tab === 'today' && <Today />}
+        {tab === 'foods' && <Foods />}
+        {tab === 'goals' && <Goals />}
+      </main>
+    </div>
+  )
+}
+
+function NavLink({ tab, current, icon, children }: { tab: Tab; current: Tab; icon: ReactNode; children: ReactNode }) {
+  return (
+    <a href={`#/${tab}`} className={`nav-link ${tab === current ? 'active' : ''}`} aria-current={tab === current ? 'page' : undefined}>
+      {icon}
+      <span>{children}</span>
+    </a>
+  )
+}
+
+/** A plate with a bite taken out of it. */
+function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <path d={LOGO_PATH} fill="currentColor" />
+    </svg>
+  )
+}
+
+const LOGO_PATH =
+  'M16 3a13 13 0 1 0 12.9 11.4 4 4 0 0 1-5.2-4.1 4 4 0 0 1-3.6-6.8A13 13 0 0 0 16 3z'
+
+const iconProps = {
+  width: 24,
+  height: 24,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true,
+} as const
+
+function TodayIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 3.5A8.5 8.5 0 0 1 20.5 12H12z" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function FoodsIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M4 6h16M4 12h16M4 18h10" />
+    </svg>
+  )
+}
+
+function GoalsIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="0.8" fill="currentColor" />
+    </svg>
+  )
+}
