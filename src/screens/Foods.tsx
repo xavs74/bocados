@@ -163,6 +163,14 @@ export function Foods() {
         </div>
       )}
 
+      <p className="attribution">
+        Los productos de supermercado vienen de{' '}
+        <a href="https://es.openfoodfacts.org" target="_blank" rel="noreferrer">
+          Open Food Facts
+        </a>{' '}
+        (licencia ODbL).
+      </p>
+
       {editing === 'new' && <FoodForm initialName={query.trim()} onClose={close} />}
       {editing && editing !== 'new' && <FoodForm food={editing} onClose={close} onDelete={() => remove(editing)} />}
     </div>

@@ -8,6 +8,8 @@ import { Sheet } from './Sheet'
 interface Props {
   food?: Food
   initialName?: string
+  /** Prefilled when a scanned barcode isn't in Open Food Facts. */
+  initialBarcode?: string
   onClose: () => void
   onSaved?: (food: Food) => void
   onDelete?: () => void
@@ -26,7 +28,7 @@ const toText = (n: number | undefined) => (n === undefined ? '' : inputNum(n))
 const parse = parseNum
 const valid = (s: string) => Number.isFinite(parse(s)) && parse(s) >= 0
 
-export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }: Props) {
+export function FoodForm({ food, initialName = '', initialBarcode, onClose, onSaved, onDelete }: Props) {
   const [name, setName] = useState(food?.name ?? initialName)
   const [category, setCategory] = useState(food?.category ?? '')
   const [values, setValues] = useState<Record<NumKey, string>>({
@@ -53,7 +55,13 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
   async function save() {
     setTouched(true)
     if (!nutrients) return
-    const data = { name: name.trim(), ...nutrients, servings: cleanServings, category: category || undefined }
+    const data = {
+      name: name.trim(),
+      ...nutrients,
+      servings: cleanServings,
+      category: category || undefined,
+      barcode: food?.barcode ?? initialBarcode,
+    }
     if (food) {
       await db.foods.update(food.id, data)
       onSaved?.({ ...food, ...data })
@@ -93,6 +101,8 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
           <span>Nombre</span>
           <input value={name} onChange={(e) => setName(e.target.value)} autoFocus={!food} aria-invalid={touched && !name.trim()} placeholder="p. ej. Yogur griego 0 %" />
         </label>
+
+        {initialBarcode && !food && <p className="hint">Código de barras {initialBarcode}. Se guardará con el alimento.</p>}
 
         <label className="field">
           <span>Categoría</span>

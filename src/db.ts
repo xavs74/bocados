@@ -20,6 +20,9 @@ export interface Food extends Nutrients {
   servings: Serving[]
   /** One of CATEGORIES for built-in foods; missing for foods people create. */
   category?: string
+  /** Set for products copied from Open Food Facts. */
+  barcode?: string
+  source?: string
   lastUsed?: number
   lastAmount?: Amount
 }
@@ -90,7 +93,9 @@ export class BocadosDB extends Dexie {
       })
     })
     if (seed) {
-      this.on('populate', async (tx) => {
+      // Version 3 indexes the barcode of products copied from Open Food Facts.
+    this.version(3).stores({ foods: '++id, name, lastUsed, barcode' })
+    this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
       })

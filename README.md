@@ -14,11 +14,16 @@ It's a local-first web app you can install: data lives in the browser (IndexedDB
 
 The built-in list (`src/data/seedFoods.json`) has 148 common foods with average values per 100 g, taken from USDA FoodData Central and BEDCA. They follow the EU label convention used in Spain: carbohydrates exclude fibre, and kcal = 4 × carbs + 4 × protein + 9 × fat + 2 × fibre. Names say whether a food is raw, cooked or drained, since that changes the numbers a lot.
 
+## Supermarket products
+
+Foods can also be pulled from [Open Food Facts](https://es.openfoodfacts.org) (ODbL licence): search results show a "Supermercados" section, and products can be scanned by barcode with the camera. Their search allows 10 requests a minute per address and can't be called from a browser, so `worker/index.js` (a Cloudflare Worker) proxies it at `/api/buscar` and `/api/codigo/:barcode`, filters out products without usable values, re-ranks them and caches the answers. Picking a product copies it into the device's own list.
+
 ## Develop
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 (proxies /api to wrangler below)
+npm run dev:api  # the Worker with the Open Food Facts API, on :8788
 npm test         # unit tests for the nutrition maths
 npm run build    # production build in dist/
 ```

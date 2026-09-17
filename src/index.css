@@ -2197,3 +2197,84 @@ kbd {
     gap: 16px;
   }
 }
+
+/* ---------- Supermarket products and barcode scanning ---------- */
+
+.search.with-scan {
+  position: relative;
+}
+
+.search.with-scan input {
+  padding-right: 52px;
+}
+
+.scan-btn {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--brand);
+}
+
+.scan-btn:hover {
+  background: var(--brand-soft);
+}
+
+.products .food-row {
+  padding: 11px 4px;
+}
+
+.products .empty {
+  padding: 12px 4px;
+  text-align: left;
+}
+
+.scanner {
+  display: grid;
+  gap: 12px;
+}
+
+.scan-view {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #000;
+  aspect-ratio: 4 / 3;
+}
+
+.scan-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scan-frame {
+  position: absolute;
+  inset: 22% 12%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+}
+
+.scan-unknown {
+  display: grid;
+  gap: 10px;
+}
+
+.attribution {
+  margin: 20px 4px 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.attribution a {
+  color: inherit;
+}

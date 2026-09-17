@@ -1,15 +1,21 @@
-// Cloudflare Workers configuration. Bocados is a static site: `npm run build`
-// writes it to dist/ and Cloudflare serves those files as they are, with no
-// Worker script. Routing uses #/ hashes, so no fallback rules are needed.
+// Cloudflare Workers configuration. `npm run build` writes the site to dist/,
+// which Cloudflare serves as it is. The Worker in worker/index.js only handles
+// /api/* (the Open Food Facts search). Routing uses #/ hashes, so no fallback
+// rules are needed.
 {
   "name": "bocados",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-17",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS"
   },
   // bocados.org is registered with Cloudflare, so deploying attaches it here.
   "routes": [{ "pattern": "bocados.org", "custom_domain": true }],
   // Wrangler turns the *.workers.dev address off once routes exist; stated here
   // so it isn't a surprise. One address also means one copy of each person's data.
-  "workers_dev": false
+  "workers_dev": false,
+  // Branch builds get their own link, so features can be tried on a phone
+  // (the camera needs HTTPS) before they reach bocados.org.
+  "preview_urls": true
 }

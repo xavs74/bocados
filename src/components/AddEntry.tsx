@@ -4,10 +4,12 @@ import { MEAL_LABEL, db, gramsOf, type Food, type Meal } from '../db'
 import { amountFrom, draftFrom, type AmountDraft } from '../lib/amount'
 import { categoryOf } from '../lib/categories'
 import { grams, kcal, matches, num } from '../lib/format'
+import { MIN_QUERY, productLabel, saveProduct, searchProducts, type Product } from '../lib/openFoodFacts'
 import { AmountEditor } from './AmountEditor'
 import { FoodForm } from './FoodForm'
 import { MealPicker } from './MealPicker'
 import { Panel } from './Panel'
+import { ScanSheet } from './ScanSheet'
 import { Sheet } from './Sheet'
 
 async function logFood(date: string, meal: Meal, food: Food, amount: NonNullable<ReturnType<typeof amountFrom>>) {
@@ -46,7 +48,8 @@ function AddEntryFlow({ date, meal, onMealChange, onAdded, frame, docked, autoFo
   const [query, setQuery] = useState('')
   const [food, setFood] = useState<Food | null>(null)
   const [draft, setDraft] = useState<AmountDraft>({ text: '', unit: -1 })
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState<{ name: string; barcode?: string } | null>(null)
+  const [scanning, setScanning] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   function choose(f: Food) {
@@ -60,7 +63,23 @@ function AddEntryFlow({ date, meal, onMealChange, onAdded, frame, docked, autoFo
     requestAnimationFrame(() => searchRef.current?.focus())
   }
 
-  const creatingForm = creating && <FoodForm initialName={query} onClose={() => setCreating(false)} onSaved={choose} />
+  const creatingForm = creating && (
+    <FoodForm initialName={creating.name} initialBarcode={creating.barcode} onClose={() => setCreating(null)} onSaved={choose} />
+  )
+
+  const scanner = scanning && (
+    <ScanSheet
+      onFound={(food) => {
+        setScanning(false)
+        choose(food)
+      }}
+      onCreate={(barcode) => {
+        setScanning(false)
+        setCreating({ name: '', barcode })
+      }}
+      onClose={() => setScanning(false)}
+    />
+  )
 
   if (food) {
     const amount = amountFrom(draft, food.servings)
@@ -105,9 +124,18 @@ function AddEntryFlow({ date, meal, onMealChange, onAdded, frame, docked, autoFo
     <>
       {frame(
         `Añadir a ${MEAL_LABEL[meal].toLowerCase()}`,
-        <FoodSearch query={query} onQuery={setQuery} onPick={choose} onCreate={() => setCreating(true)} inputRef={searchRef} autoFocus={autoFocus} />,
+        <FoodSearch
+          query={query}
+          onQuery={setQuery}
+          onPick={choose}
+          onCreate={() => setCreating({ name: query })}
+          onScan={() => setScanning(true)}
+          inputRef={searchRef}
+          autoFocus={autoFocus}
+        />,
       )}
       {creatingForm}
+      {scanner}
     </>
   )
 }
@@ -168,11 +196,12 @@ interface SearchProps {
   onQuery: (q: string) => void
   onPick: (f: Food) => void
   onCreate: () => void
+  onScan: () => void
   inputRef: RefObject<HTMLInputElement | null>
   autoFocus: boolean
 }
 
-function FoodSearch({ query, onQuery, onPick, onCreate, inputRef, autoFocus }: SearchProps) {
+function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus }: SearchProps) {
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
   const [active, setActive] = useState(0)
   // Enter picks the highlighted food once there's a query or the arrows were used.
@@ -203,7 +232,7 @@ function FoodSearch({ query, onQuery, onPick, onCreate, inputRef, autoFocus }: S
 
   return (
     <>
-      <div className="search">
+      <div className="search with-scan">
         <input
           ref={inputRef}
           type="search"
@@ -229,6 +258,9 @@ function FoodSearch({ query, onQuery, onPick, onCreate, inputRef, autoFocus }: S
             }
           }}
         />
+        <button type="button" className="scan-btn" onClick={onScan} aria-label="Escanear código de barras" title="Escanear código de barras">
+          <BarcodeIcon />
+        </button>
       </div>
       {foods && (
         <div className="results" id="food-results" ref={listRef}>
@@ -257,9 +289,79 @@ function FoodSearch({ query, onQuery, onPick, onCreate, inputRef, autoFocus }: S
           ) : (
             <p className="empty">Ningún alimento coincide con «{query}».</p>
           )}
+          <ProductResults query={query} onPick={onPick} />
         </div>
       )}
     </>
+  )
+}
+
+/**
+ * Supermarket products from Open Food Facts. Searched a moment after typing
+ * stops, because their search allows only a few requests a minute.
+ */
+function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) => void }) {
+  const [state, setState] = useState<{ status: 'idle' | 'loading' | 'done' | 'error'; items: Product[] }>({ status: 'idle', items: [] })
+  const q = query.trim()
+
+  useEffect(() => {
+    if (q.length < MIN_QUERY) {
+      setState({ status: 'idle', items: [] })
+      return
+    }
+    const controller = new AbortController()
+    setState((s) => ({ ...s, status: 'loading' }))
+    const timer = setTimeout(async () => {
+      try {
+        const items = await searchProducts(q, controller.signal)
+        setState({ status: 'done', items })
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') setState({ status: 'error', items: [] })
+      }
+    }, 600)
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [q])
+
+  if (state.status === 'idle') return null
+
+  return (
+    <section className="products">
+      <h3 className="group-title">
+        Supermercados <span className="muted">· Open Food Facts</span>
+      </h3>
+      {state.status === 'loading' && <p className="empty">Buscando productos…</p>}
+      {state.status === 'error' && <p className="empty">No se pudo buscar. Inténtalo otra vez.</p>}
+      {state.status === 'done' &&
+        (state.items.length === 0 ? (
+          <p className="empty">Ningún producto coincide con «{q}».</p>
+        ) : (
+          <ul className="food-list">
+            {state.items.map((p) => (
+              <li key={`${p.code}-${p.name}`}>
+                <button className="food-row" onClick={async () => onPick(await saveProduct(p))}>
+                  <span className="food-name">{productLabel(p)}</span>
+                  <span className="food-meta">
+                    {kcal(p.kcal)} kcal · Carb {num(p.carbs)} · Prot {num(p.protein)} · Grasa {num(p.fat)}
+                    <span className="muted"> /100 g{p.serving ? ` · ración ${num(p.serving)} g` : ''}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
+    </section>
+  )
+}
+
+function BarcodeIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 7V5.5A2.5 2.5 0 0 1 5.5 3H7M17 3h1.5A2.5 2.5 0 0 1 21 5.5V7M21 17v1.5a2.5 2.5 0 0 1-2.5 2.5H17M7 21H5.5A2.5 2.5 0 0 1 3 18.5V17" />
+      <path d="M7 8v8M10.5 8v8M14 8v8M17 8v8" strokeWidth="1.6" />
+    </svg>
   )
 }
 
