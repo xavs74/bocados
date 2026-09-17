@@ -545,8 +545,9 @@ input[type='range'] {
 .ring-legend {
   list-style: none;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   margin: 0 0 16px;
   padding: 0;
 }
@@ -554,11 +555,12 @@ input[type='range'] {
 .ring-legend li {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
+  gap: 4px;
+  padding: 4px 9px;
+  white-space: nowrap;
   border-radius: 999px;
   background: color-mix(in srgb, var(--c) 14%, transparent);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1395,4 +1397,9 @@ input[type='range'] {
 .split-grams {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.ring-legend .swatch {
+  width: 8px;
+  height: 8px;
 }

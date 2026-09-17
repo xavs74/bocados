@@ -6,7 +6,8 @@ const oneFmt = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 })
 export const kcal = (n: number) => intFmt.format(Math.round(n))
 export const grams = (n: number) => `${oneFmt.format(n)} g`
 export const num = (n: number) => oneFmt.format(n)
-export const pct = (n: number) => `${intFmt.format(Math.round(n))} %`
+// Spanish puts a space before %; a non-breaking one keeps the sign on the number's line.
+export const pct = (n: number) => `${intFmt.format(Math.round(n))}\u00a0%`
 
 /** Plain number for an editable input, with a decimal comma. */
 export const inputNum = (n: number) => String(+n.toFixed(2)).replace('.', ',')

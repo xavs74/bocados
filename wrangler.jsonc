@@ -1,0 +1,10 @@
+// Cloudflare Workers configuration. Bocado is a static site: `npm run build`
+// writes it to dist/ and Cloudflare serves those files as they are, with no
+// Worker script. Routing uses #/ hashes, so no fallback rules are needed.
+{
+  "name": "bocado",
+  "compatibility_date": "2026-09-17",
+  "assets": {
+    "directory": "./dist"
+  }
+}

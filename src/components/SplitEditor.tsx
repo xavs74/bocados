@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
-import { inputNum, parseNum } from '../lib/format'
+import { inputNum, parseNum, pct } from '../lib/format'
 import { MACROS, MACRO_LABEL, MACRO_SHORT, goalGrams, type MacroKey } from '../lib/nutrition'
 import { moveDivider, rebalance, type Split } from '../lib/split'
 
@@ -20,7 +20,7 @@ export function SplitEditor({ split, kcal, onChange }: Props) {
   return (
     <div className="split-editor">
       <SplitBar split={split} onChange={onChange} />
-      <p className="hint">Arrastra las marcas o usa − y +. Los otros dos macros se ajustan solos para que siempre sumen 100 %.</p>
+      <p className="hint">Arrastra las marcas o usa − y +. Los otros dos macros se ajustan solos para que siempre sumen {pct(100)}.</p>
       <ul className="split-rows">
         {MACROS.map((m) => (
           <li key={m} className={`split-row macro-${m}`}>
@@ -121,7 +121,7 @@ function SplitBar({ split, onChange }: { split: Split; onChange: (s: Split) => v
         <div key={m} className={`split-seg macro-${m}`} style={{ width: `${split[m]}%` }}>
           {split[m] >= 12 && (
             <span>
-              {MACRO_SHORT[m]} {split[m]} %
+              {MACRO_SHORT[m]} {pct(split[m])}
             </span>
           )}
         </div>
