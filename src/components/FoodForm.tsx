@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { db, type Food, type Serving } from '../db'
+import { CATEGORIES, OWN_CATEGORY } from '../lib/categories'
 import { inputNum, kcal, parseNum } from '../lib/format'
 import { kcalLooksWrong, macroKcal } from '../lib/nutrition'
 import { Sheet } from './Sheet'
@@ -27,6 +28,7 @@ const valid = (s: string) => Number.isFinite(parse(s)) && parse(s) >= 0
 
 export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }: Props) {
   const [name, setName] = useState(food?.name ?? initialName)
+  const [category, setCategory] = useState(food?.category ?? '')
   const [values, setValues] = useState<Record<NumKey, string>>({
     kcal: toText(food?.kcal),
     carbs: toText(food?.carbs),
@@ -51,7 +53,7 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
   async function save() {
     setTouched(true)
     if (!nutrients) return
-    const data = { name: name.trim(), ...nutrients, servings: cleanServings }
+    const data = { name: name.trim(), ...nutrients, servings: cleanServings, category: category || undefined }
     if (food) {
       await db.foods.update(food.id, data)
       onSaved?.({ ...food, ...data })
@@ -90,6 +92,18 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
         <label className="field">
           <span>Nombre</span>
           <input value={name} onChange={(e) => setName(e.target.value)} autoFocus={!food} aria-invalid={touched && !name.trim()} placeholder="p. ej. Yogur griego 0 %" />
+        </label>
+
+        <label className="field">
+          <span>Categoría</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">{OWN_CATEGORY}</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </label>
 
         <fieldset className="fieldset">

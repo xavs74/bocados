@@ -18,6 +18,8 @@ export interface Food extends Nutrients {
   id: number
   name: string
   servings: Serving[]
+  /** One of CATEGORIES for built-in foods; missing for foods people create. */
+  category?: string
   lastUsed?: number
   lastAmount?: Amount
 }

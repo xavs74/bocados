@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useState } from 'react'
 import { AddEntrySheet } from '../components/AddEntrySheet'
+import { CalendarSheet } from '../components/CalendarSheet'
+import { CalendarIcon, Chevron } from '../components/Chevron'
 import { EditEntrySheet } from '../components/EditEntrySheet'
 import { Summary } from '../components/Summary'
 import { MEALS, MEAL_LABEL, db, type Entry, type Meal } from '../db'
@@ -14,11 +16,13 @@ export function Today() {
   const [date, setDate] = useState(isoDate)
   const [adding, setAdding] = useState<Meal | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const goals = useGoals()
   const entries = useLiveQuery(() => db.entries.where('date').equals(date).sortBy('createdAt'), [date])
 
   const closeAdd = useCallback(() => setAdding(null), [])
   const closeEdit = useCallback(() => setEditing(null), [])
+  const closeCalendar = useCallback(() => setCalendarOpen(false), [])
 
   const list = entries ?? []
   const totals = sum(list.map((e) => scale(e.per100, e.grams)))
@@ -30,10 +34,13 @@ export function Today() {
         <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label="Día anterior">
           <Chevron dir="left" />
         </button>
-        <div className="date-label">
+        <button className="date-label" onClick={() => setCalendarOpen(true)} aria-label={`${fullDate(date)}. Abrir calendario`}>
           <h1>{dayLabel(date)}</h1>
-          <span className="muted">{fullDate(date)}</span>
-        </div>
+          <span className="date-sub">
+            <CalendarIcon />
+            {fullDate(date)}
+          </span>
+        </button>
         <button className="icon-btn" onClick={() => setDate(addDays(date, 1))} aria-label="Día siguiente">
           <Chevron dir="right" />
         </button>
@@ -97,6 +104,7 @@ export function Today() {
 
       {adding && <AddEntrySheet date={date} meal={adding} onClose={closeAdd} />}
       {editing && <EditEntrySheet entry={editing} onClose={closeEdit} />}
+      {calendarOpen && <CalendarSheet date={date} onPick={setDate} onClose={closeCalendar} />}
     </div>
   )
 }
@@ -105,19 +113,4 @@ function amountText(e: Entry) {
   const s = e.amount.serving
   if (!s) return grams(e.grams)
   return `${num(e.amount.quantity)} × ${s.label.replace(/^1\s+/, '')} · ${grams(e.grams)}`
-}
-
-export function Chevron({ dir }: { dir: 'left' | 'right' }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-      <path
-        d={dir === 'left' ? 'M13.5 5l-6 6 6 6' : 'M8.5 5l6 6-6 6'}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
 }

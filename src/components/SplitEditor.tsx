@@ -113,6 +113,7 @@ function SplitBar({ split, onChange }: { split: Split; onChange: (s: Split) => v
   return (
     <div
       className="split-bar"
+      data-no-swipe
       ref={trackRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

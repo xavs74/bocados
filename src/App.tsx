@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
 import { Goals } from './screens/Goals'
 import { Today } from './screens/Today'
@@ -14,6 +15,15 @@ function tabFromHash(): Tab {
 export default function App() {
   const [tab, setTab] = useState<Tab>(tabFromHash)
   const mainRef = useRef<HTMLElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
+
+  const swipe = useCallback((dir: 1 | -1) => {
+    const next = TABS[TABS.indexOf(tabFromHash()) + dir]
+    if (!next) return false
+    location.hash = `#/${next}`
+    return true
+  }, [])
+  useSwipeTabs(mainRef, innerRef, swipe)
 
   useEffect(() => {
     const onHash = () => setTab(tabFromHash())
@@ -35,7 +45,7 @@ export default function App() {
       </header>
     <nav className="nav" aria-label="Principal">
         <NavLink tab="today" current={tab} icon={<TodayIcon />}>
-          Hoy
+          Diario
         </NavLink>
         <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
           Alimentos
@@ -46,7 +56,7 @@ export default function App() {
       </nav>
       {/* Only this area scrolls, so the header and tab bar never move with the page. */}
       <main className="main" ref={mainRef}>
-        <div className="main-inner">
+        <div className="main-inner" ref={innerRef} onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('enter-from-left', 'enter-from-right')}>
           {tab === 'today' && <Today />}
           {tab === 'foods' && <Foods />}
           {tab === 'goals' && <Goals />}
