@@ -300,7 +300,7 @@ function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFo
  * Supermarket products from Open Food Facts. Searched a moment after typing
  * stops, because their search allows only a few requests a minute.
  */
-function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) => void }) {
+export function ProductResults({ query, onPick, action = 'Añadir' }: { query: string; onPick: (f: Food) => void; action?: string }) {
   // Holds the answer for one query; anything else on screen means it's still loading.
   const [answer, setAnswer] = useState<{ query: string; items: Product[]; failed: boolean } | null>(null)
   const q = query.trim()
@@ -339,7 +339,7 @@ function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) =>
           <ul className="food-list">
             {ready.items.map((p) => (
               <li key={`${p.code}-${p.name}`}>
-                <button className="food-row" onClick={async () => onPick(await saveProduct(p))}>
+                <button className="food-row" onClick={async () => onPick(await saveProduct(p))} title={`${action}: ${productLabel(p)}`}>
                   <span className="food-name">{productLabel(p)}</span>
                   <span className="food-meta">
                     {kcal(p.kcal)} kcal · Carb {num(p.carbs)} · Prot {num(p.protein)} · Grasa {num(p.fat)}
@@ -354,7 +354,7 @@ function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) =>
   )
 }
 
-function BarcodeIcon() {
+export function BarcodeIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <path d="M3 7V5.5A2.5 2.5 0 0 1 5.5 3H7M17 3h1.5A2.5 2.5 0 0 1 21 5.5V7M21 17v1.5a2.5 2.5 0 0 1-2.5 2.5H17M7 21H5.5A2.5 2.5 0 0 1 3 18.5V17" />

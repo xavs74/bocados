@@ -97,10 +97,17 @@ export function rank(items, query) {
     const hits = words.filter((w) => haystack.includes(w)).length
     return { item, all: hits === words.length, hits }
   })
-  const full = scored.filter((s) => s.all)
-  const list = full.length ? full : scored.filter((s) => s.hits > 0)
-  return list
-    .sort((a, b) => b.hits - a.hits || Number(b.item.spain) - Number(a.item.spain) || a.item.name.length - b.item.name.length)
+  // Products matching every word first, then near matches, so a query like
+  // "atun claro hacendado" still offers other tuna if only one matches in full.
+  return scored
+    .filter((s) => s.hits > 0)
+    .sort(
+      (a, b) =>
+        Number(b.all) - Number(a.all) ||
+        b.hits - a.hits ||
+        Number(b.item.spain) - Number(a.item.spain) ||
+        a.item.name.length - b.item.name.length,
+    )
     .map((s) => s.item)
 }
 

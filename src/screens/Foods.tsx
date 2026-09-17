@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useMemo, useState } from 'react'
+import { BarcodeIcon, ProductResults } from '../components/AddEntry'
 import { FoodForm } from '../components/FoodForm'
+import { ScanSheet } from '../components/ScanSheet'
 import { db, type Food } from '../db'
 import { addMissingBasicFoods, missingBasicFoods } from '../lib/basicFoods'
 import { categoryOf, groupByCategory } from '../lib/categories'
@@ -15,8 +17,14 @@ export function Foods() {
   const [editing, setEditing] = useState<Food | 'new' | null>(null)
   // null when not selecting; otherwise the ids picked for deletion.
   const [selected, setSelected] = useState<Set<number> | null>(null)
+  const [scanning, setScanning] = useState(false)
+  const [added, setAdded] = useState<string | null>(null)
+  const [scannedBarcode, setScannedBarcode] = useState<string | undefined>()
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
-  const close = useCallback(() => setEditing(null), [])
+  const close = useCallback(() => {
+    setEditing(null)
+    setScannedBarcode(undefined)
+  }, [])
 
   const searching = query.trim() !== ''
   const shown = useMemo(() => (foods ?? []).filter((f) => matches(f.name, query)), [foods, query])
@@ -80,7 +88,7 @@ export function Foods() {
           )}
         </div>
       </div>
-      <div className="search sticky">
+      <div className="search sticky with-scan">
         <input
           type="search"
           placeholder={`Buscar entre ${foods?.length ?? ''} alimentos`}
@@ -88,7 +96,16 @@ export function Foods() {
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Buscar alimento"
         />
+        <button type="button" className="scan-btn" onClick={() => setScanning(true)} aria-label="Escanear código de barras" title="Escanear código de barras">
+          <BarcodeIcon />
+        </button>
       </div>
+
+      {added && (
+        <p className="added-note" role="status">
+          ✓ Añadido a tus alimentos: {added}
+        </p>
+      )}
 
       {/* Devices that started with the old personal list see this first; everyone else at the end. */}
       {missing >= 20 && basicBanner}
@@ -147,6 +164,9 @@ export function Foods() {
         </div>
       </div>
 
+      {/* Supermarket products, so foods can be added to the list without logging them. */}
+      {searching && !selected && <ProductResults query={query} onPick={(f) => setAdded(f.name)} action="Guardar" />}
+
       {missing > 0 && missing < 20 && basicBanner}
 
       {selected && (
@@ -171,7 +191,22 @@ export function Foods() {
         (licencia ODbL).
       </p>
 
-      {editing === 'new' && <FoodForm initialName={query.trim()} onClose={close} />}
+      {scanning && (
+        <ScanSheet
+          onFound={(food) => {
+            setScanning(false)
+            setAdded(food.name)
+          }}
+          onCreate={(barcode) => {
+            setScanning(false)
+            setEditing('new')
+            setScannedBarcode(barcode)
+          }}
+          onClose={() => setScanning(false)}
+        />
+      )}
+
+      {editing === 'new' && <FoodForm initialName={query.trim()} initialBarcode={scannedBarcode} onClose={close} />}
       {editing && editing !== 'new' && <FoodForm food={editing} onClose={close} onDelete={() => remove(editing)} />}
     </div>
   )
