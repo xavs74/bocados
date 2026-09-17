@@ -6,8 +6,11 @@ import { addMissingBasicFoods, missingBasicFoods } from '../lib/basicFoods'
 import { categoryOf, groupByCategory } from '../lib/categories'
 import { kcal, matches, num } from '../lib/format'
 import { kcalLooksWrong } from '../lib/nutrition'
+import { useIsLaptop } from '../lib/useMediaQuery'
+import { MacroCols, MacroColsHead } from '../components/MacroCols'
 
 export function Foods() {
+  const laptop = useIsLaptop()
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Food | 'new' | null>(null)
   // null when not selecting; otherwise the ids picked for deletion.
@@ -101,18 +104,48 @@ export function Foods() {
         </div>
       )}
 
-      {searching ? (
-        shown.length > 0 && <FoodList foods={shown} selected={selected} showCategory onToggle={toggle} onOpen={setEditing} />
-      ) : (
-        groups.map((g) => (
-          <section key={g.category} className="food-group" aria-label={g.category}>
-            <h2 className="group-title">
-              {g.category} <span className="muted">· {g.foods.length}</span>
-            </h2>
-            <FoodList foods={g.foods} selected={selected} onToggle={toggle} onOpen={setEditing} />
-          </section>
-        ))
-      )}
+      <div className="foods-layout">
+        {laptop && !searching && groups.length > 1 && (
+          <nav className="cat-index" aria-label="Categorías">
+            {groups.map((g) => (
+              <a
+                key={g.category}
+                href={`#cat-${slug(g.category)}`}
+                onClick={(e) => {
+                  // Hash links drive the tabs, so scroll by hand.
+                  e.preventDefault()
+                  document.getElementById(`cat-${slug(g.category)}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+              >
+                <span>{g.category}</span>
+                <span className="muted">{g.foods.length}</span>
+              </a>
+            ))}
+          </nav>
+        )}
+        <div className="foods-main">
+          {laptop && shown.length > 0 && (
+            <div className="food-table-head" aria-hidden="true">
+              {selected && <span />}
+              <span>Alimento</span>
+              <MacroColsHead />
+              <span>Raciones</span>
+            </div>
+          )}
+          {searching ? (
+            shown.length > 0 && <FoodList foods={shown} selected={selected} showCategory laptop={laptop} onToggle={toggle} onOpen={setEditing} />
+          ) : (
+            groups.map((g) => (
+              <section key={g.category} id={`cat-${slug(g.category)}`} className="food-group" aria-label={g.category}>
+                <h2 className="group-title">
+                  {g.category} <span className="muted">· {g.foods.length}</span>
+                </h2>
+                <FoodList foods={g.foods} selected={selected} laptop={laptop} onToggle={toggle} onOpen={setEditing} />
+              </section>
+            ))
+          )}
+        </div>
+      </div>
 
       {missing > 0 && missing < 20 && basicBanner}
 
@@ -136,15 +169,18 @@ export function Foods() {
   )
 }
 
+const slug = (s: string) => s.normalize('NFD').replace(/[^\w]+/g, '-').toLowerCase()
+
 interface ListProps {
   foods: Food[]
   selected: Set<number> | null
   showCategory?: boolean
+  laptop: boolean
   onToggle: (id: number) => void
   onOpen: (food: Food) => void
 }
 
-function FoodList({ foods, selected, showCategory, onToggle, onOpen }: ListProps) {
+function FoodList({ foods, selected, showCategory, laptop, onToggle, onOpen }: ListProps) {
   return (
     <ul className="food-list card">
       {foods.map((f) => {
@@ -167,11 +203,21 @@ function FoodList({ foods, selected, showCategory, onToggle, onOpen }: ListProps
                     </span>
                   )}
                 </span>
-                <span className="food-meta">
-                  {kcal(f.kcal)} kcal · Carb {num(f.carbs)} · Prot {num(f.protein)} · Grasa {num(f.fat)}
-                  {showCategory && <span className="muted"> · {categoryOf(f)}</span>}
-                </span>
+                {laptop ? (
+                  showCategory && <span className="food-meta">{categoryOf(f)}</span>
+                ) : (
+                  <span className="food-meta">
+                    {kcal(f.kcal)} kcal · Carb {num(f.carbs)} · Prot {num(f.protein)} · Grasa {num(f.fat)}
+                    {showCategory && <span className="muted"> · {categoryOf(f)}</span>}
+                  </span>
+                )}
               </span>
+              {laptop && (
+                <>
+                  <MacroCols n={f} />
+                  <span className="col-servings muted">{f.servings.map((s) => s.label).join(', ') || '–'}</span>
+                </>
+              )}
             </button>
           </li>
         )

@@ -24,6 +24,24 @@ interface Props {
 }
 
 export function CalendarSheet({ date, onPick, onClose }: Props) {
+  return (
+    <Sheet title="Calendario" onClose={onClose}>
+      <CalendarMonth
+        date={date}
+        onPick={(d) => {
+          onPick(d)
+          onClose()
+        }}
+      />
+    </Sheet>
+  )
+}
+
+/**
+ * A month of days marked against the calorie goal. Starts on the month of
+ * `date`; give it a key per month to follow `date` into other months.
+ */
+export function CalendarMonth({ date, onPick }: { date: string; onPick: (date: string) => void }) {
   const initial = parseIso(date)
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() })
   const goals = useGoals()
@@ -55,94 +73,86 @@ export function CalendarSheet({ date, onPick, onClose }: Props) {
   const title = new Date(view.year, view.month, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' })
 
   return (
-    <Sheet title="Calendario" onClose={onClose}>
-      <div className="calendar">
-        <div className="cal-head">
-          <button className="icon-btn" onClick={() => shift(-1)} aria-label="Mes anterior">
-            <Chevron dir="left" />
-          </button>
-          <h3 className="cal-title">{title.charAt(0).toUpperCase() + title.slice(1)}</h3>
-          <button className="icon-btn" onClick={() => shift(1)} aria-label="Mes siguiente">
-            <Chevron dir="right" />
-          </button>
-        </div>
-
-        <table className="cal-grid">
-          <thead>
-            <tr>
-              {WEEKDAYS.map((d) => (
-                <th key={d} scope="col">
-                  {d}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {weeks.map((week, i) => (
-              <tr key={i}>
-                {week.map((day, j) => {
-                  if (!day) return <td key={j} />
-                  const k = totals?.get(day)
-                  const status = dayStatus(k, goals.kcal)
-                  const label = parseIso(day).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })
-                  return (
-                    <td key={j}>
-                      <button
-                        className={`cal-day status-${status} ${day === date ? 'selected' : ''} ${day === today ? 'today' : ''}`}
-                        onClick={() => {
-                          onPick(day)
-                          onClose()
-                        }}
-                        aria-label={`${label}${k ? `, ${kcal(k)} kcal, ${STATUS_LABEL[status as keyof typeof STATUS_LABEL].toLowerCase()}` : ', sin registros'}`}
-                        aria-current={day === date ? 'date' : undefined}
-                      >
-                        <span className="cal-num">{parseIso(day).getDate()}</span>
-                        <span className="cal-mark" aria-hidden="true" />
-                      </button>
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <ul className="cal-legend">
-          {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map((s) => (
-            <li key={s} className={`status-${s}`}>
-              <span className="cal-mark" aria-hidden="true" />
-              {STATUS_LABEL[s]}
-            </li>
-          ))}
-        </ul>
-
-        <div className="cal-stats">
-          <div>
-            <strong>{logged.length}</strong>
-            <span>días registrados</span>
-          </div>
-          <div>
-            <strong>{logged.length ? kcal(average) : '–'}</strong>
-            <span>kcal de media</span>
-          </div>
-          <div>
-            <strong>{onTarget}</strong>
-            <span>cerca del objetivo</span>
-          </div>
-        </div>
-
-        {date !== today && (
-          <button
-            className="btn ghost block"
-            onClick={() => {
-              onPick(today)
-              onClose()
-            }}
-          >
-            Ir a hoy
-          </button>
-        )}
+    <div className="calendar">
+      <div className="cal-head">
+        <button className="icon-btn" onClick={() => shift(-1)} aria-label="Mes anterior">
+          <Chevron dir="left" />
+        </button>
+        <h3 className="cal-title">{title.charAt(0).toUpperCase() + title.slice(1)}</h3>
+        <button className="icon-btn" onClick={() => shift(1)} aria-label="Mes siguiente">
+          <Chevron dir="right" />
+        </button>
       </div>
-    </Sheet>
+
+      <table className="cal-grid">
+        <thead>
+          <tr>
+            {WEEKDAYS.map((d) => (
+              <th key={d} scope="col">
+                {d}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((week, i) => (
+            <tr key={i}>
+              {week.map((day, j) => {
+                if (!day) return <td key={j} />
+                const k = totals?.get(day)
+                const status = dayStatus(k, goals.kcal)
+                const label = parseIso(day).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })
+                return (
+                  <td key={j}>
+                    <button
+                      className={`cal-day status-${status} ${day === date ? 'selected' : ''} ${day === today ? 'today' : ''}`}
+                      onClick={() => onPick(day)}
+                      aria-label={`${label}${k ? `, ${kcal(k)} kcal, ${STATUS_LABEL[status as keyof typeof STATUS_LABEL].toLowerCase()}` : ', sin registros'}`}
+                      aria-current={day === date ? 'date' : undefined}
+                    >
+                      <span className="cal-num">{parseIso(day).getDate()}</span>
+                      <span className="cal-mark" aria-hidden="true" />
+                    </button>
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <ul className="cal-legend">
+        {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map((s) => (
+          <li key={s} className={`status-${s}`}>
+            <span className="cal-mark" aria-hidden="true" />
+            {STATUS_LABEL[s]}
+          </li>
+        ))}
+      </ul>
+
+      <div className="cal-stats">
+        <div>
+          <strong>{logged.length}</strong>
+          <span>días registrados</span>
+        </div>
+        <div>
+          <strong>{logged.length ? kcal(average) : '–'}</strong>
+          <span>kcal de media</span>
+        </div>
+        <div>
+          <strong>{onTarget}</strong>
+          <span>cerca del objetivo</span>
+        </div>
+      </div>
+
+      {date !== today && (
+        <button
+          className="btn ghost block"
+          onClick={() => onPick(today)}
+        >
+          Ir a hoy
+        </button>
+      )}
+    </div>
   )
 }

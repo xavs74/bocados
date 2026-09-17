@@ -106,7 +106,7 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
   }
 
   return (
-    <>
+    <div className="goals-grid">
       <section className="card pad">
         <h2 className="section-title">Calorías diarias</h2>
         <div className="segmented two" role="radiogroup" aria-label="Cómo fijar las calorías">
@@ -167,7 +167,7 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
         </div>
         <SplitEditor split={goals.split} kcal={goals.kcal} onChange={(split) => update({ ...goals, split })} />
       </section>
-    </>
+    </div>
   )
 }
 

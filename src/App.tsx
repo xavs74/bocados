@@ -68,7 +68,7 @@ export default function App() {
 
 function NavLink({ tab, current, icon, children }: { tab: Tab; current: Tab; icon: ReactNode; children: ReactNode }) {
   return (
-    <a href={`#/${tab}`} className={`nav-link ${tab === current ? 'active' : ''}`} aria-current={tab === current ? 'page' : undefined}>
+    <a href={`#/${tab}`} className={`nav-link ${tab === current ? 'active' : ''}`} aria-current={tab === current ? 'page' : undefined} title={String(children)}>
       {icon}
       <span>{children}</span>
     </a>
