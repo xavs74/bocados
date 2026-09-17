@@ -64,13 +64,13 @@ const SERVING_ES: Record<string, string> = {
   '1 cup': '1 taza',
 }
 
-export class BocadoDB extends Dexie {
+export class BocadosDB extends Dexie {
   foods!: EntityTable<Food, 'id'>
   entries!: EntityTable<Entry, 'id'>
   settings!: EntityTable<Setting, 'key'>
 
-  constructor() {
-    super('bocado')
+  constructor(name: string, { seed }: { seed: boolean }) {
+    super(name)
     this.version(1).stores({
       foods: '++id, name, lastUsed',
       entries: '++id, date, foodId',
@@ -87,14 +87,47 @@ export class BocadoDB extends Dexie {
         if (e.amount.serving) e.amount.serving = rename(e.amount.serving)
       })
     })
-    this.on('populate', async (tx) => {
-      await tx.table('foods').bulkAdd(seedFoods)
-      await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
-    })
+    if (seed) {
+      this.on('populate', async (tx) => {
+        await tx.table('foods').bulkAdd(seedFoods)
+        await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
+      })
+    }
   }
 }
 
-export const db = new BocadoDB()
+export const db = new BocadosDB('bocados', { seed: true })
+
+/** The app was called Bocado before; its data lived in a database of that name. */
+const LEGACY_DB = 'bocado'
+const LEGACY_IMPORTED = 'legacyImported'
+
+/**
+ * Moves data from the old "bocado" database into "bocados", once. The copy and
+ * its marker are written in one transaction, so a failed copy is retried on the
+ * next start instead of being skipped.
+ */
+export async function migrateLegacyDb(): Promise<void> {
+  if (!(await Dexie.exists(LEGACY_DB))) return
+  const legacy = new BocadosDB(LEGACY_DB, { seed: false })
+  try {
+    if (!(await db.settings.get(LEGACY_IMPORTED))) {
+      const [foods, entries, settings] = await Promise.all([legacy.foods.toArray(), legacy.entries.toArray(), legacy.settings.toArray()])
+      await db.transaction('rw', db.foods, db.entries, db.settings, async () => {
+        await Promise.all([db.foods.clear(), db.entries.clear(), db.settings.clear()])
+        await db.foods.bulkAdd(foods)
+        await db.entries.bulkAdd(entries)
+        await db.settings.bulkAdd(settings)
+        await db.settings.put({ key: LEGACY_IMPORTED, value: new Date().toISOString() })
+      })
+    }
+    legacy.close()
+    await Dexie.delete(LEGACY_DB)
+  } catch (e) {
+    legacy.close()
+    console.error('No se pudieron migrar los datos de Bocado', e)
+  }
+}
 
 export function gramsOf(amount: Amount): number {
   return amount.serving ? amount.quantity * amount.serving.grams : amount.quantity

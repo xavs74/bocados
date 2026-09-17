@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Bocado',
-        short_name: 'Bocado',
+        name: 'Bocados',
+        short_name: 'Bocados',
         description: 'Apunta lo que comes y mira tus calorías y macros frente a tus objetivos.',
         lang: 'es',
         theme_color: '#2f7d5b',

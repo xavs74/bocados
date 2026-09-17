@@ -1,4 +1,6 @@
-# Bocado
+# Bocados
+
+Live at https://bocados.org
 
 Apunta lo que comes y mira tus calorías y macros frente a tus objetivos. The interface is in Spanish.
 

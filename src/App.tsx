@@ -30,7 +30,7 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href="#/today">
           <Logo />
-          <span>Bocado</span>
+          <span>Bocados</span>
         </a>
       </header>
     <nav className="nav" aria-label="Principal">

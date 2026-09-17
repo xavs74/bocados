@@ -1,6 +1,8 @@
 import { db } from '../db'
 
-const FORMAT = 'bocado-backup'
+const FORMAT = 'bocados-backup'
+// Backups exported before the rename to Bocados.
+const LEGACY_FORMAT = 'bocado-backup'
 
 export async function exportBackup(): Promise<void> {
   const data = {
@@ -15,7 +17,7 @@ export async function exportBackup(): Promise<void> {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `bocado-copia-${data.exportedAt.slice(0, 10)}.json`
+  a.download = `bocados-copia-${data.exportedAt.slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -29,8 +31,8 @@ export async function importBackup(file: File): Promise<{ foods: number; entries
     throw new Error('Ese archivo no se puede leer.')
   }
   const b = data as Record<string, unknown>
-  if (b?.format !== FORMAT || !Array.isArray(b.foods) || !Array.isArray(b.entries) || !Array.isArray(b.settings)) {
-    throw new Error('Ese archivo no es una copia de Bocado.')
+  if ((b?.format !== FORMAT && b?.format !== LEGACY_FORMAT) || !Array.isArray(b.foods) || !Array.isArray(b.entries) || !Array.isArray(b.settings)) {
+    throw new Error('Ese archivo no es una copia de Bocados.')
   }
   await db.transaction('rw', db.foods, db.entries, db.settings, async () => {
     await Promise.all([db.foods.clear(), db.entries.clear(), db.settings.clear()])
