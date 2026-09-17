@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { productByBarcode, saveProduct, type Product } from '../lib/openFoodFacts'
 import type { Food } from '../db'
 import { Sheet } from './Sheet'
@@ -20,6 +20,9 @@ interface Props {
 export function ScanSheet({ onFound, onCreate, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [status, setStatus] = useState<Status>({ step: 'starting' })
+  const [typed, setTyped] = useState('')
+  const [checking, setChecking] = useState(false)
+  const lookUpRef = useRef<(code: string) => Promise<void>>(null)
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -85,6 +88,7 @@ export function ScanSheet({ onFound, onCreate, onClose }: Props) {
       }
     }
 
+    lookUpRef.current = lookUp
     run()
     return () => {
       stop = true
@@ -92,10 +96,21 @@ export function ScanSheet({ onFound, onCreate, onClose }: Props) {
     }
   }, [onFound])
 
+  async function lookUpTyped(e: FormEvent) {
+    e.preventDefault()
+    const code = typed.replace(/\D/g, '')
+    if (code.length < 6) return
+    setChecking(true)
+    await lookUpRef.current?.(code)
+    setChecking(false)
+  }
+
+  const cameraFailed = status.step === 'error'
+
   return (
     <Sheet title="Escanear código de barras" onClose={onClose}>
       <div className="scanner">
-        <div className="scan-view">
+        <div className={`scan-view ${cameraFailed ? 'failed' : ''}`}>
           <video ref={videoRef} playsInline muted aria-label="Cámara" />
           <div className="scan-frame" aria-hidden="true" />
         </div>
@@ -112,6 +127,23 @@ export function ScanSheet({ onFound, onCreate, onClose }: Props) {
           </div>
         )}
         {status.step === 'error' && <p className="hint warn">{status.message}</p>}
+
+        <form className="manual-code" onSubmit={lookUpTyped}>
+          <label className="field grow">
+            <span>¿No lo lee? Escribe el código</span>
+            <input
+              inputMode="numeric"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder="8480000108487"
+              aria-label="Código de barras"
+              autoFocus={cameraFailed}
+            />
+          </label>
+          <button type="submit" className="btn ghost" disabled={typed.replace(/\D/g, '').length < 6 || checking}>
+            {checking ? 'Buscando…' : 'Buscar'}
+          </button>
+        </form>
       </div>
     </Sheet>
   )

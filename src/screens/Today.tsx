@@ -4,6 +4,7 @@ import { AddEntryPanel, AddEntrySheet } from '../components/AddEntry'
 import { CalendarMonth, CalendarSheet } from '../components/CalendarSheet'
 import { CalendarIcon, Chevron } from '../components/Chevron'
 import { EditEntrySheet } from '../components/EditEntrySheet'
+import { RepeatSheet } from '../components/RepeatSheet'
 import { MacroCols, MacroColsHead } from '../components/MacroCols'
 import { Summary } from '../components/Summary'
 import { MEALS, MEAL_LABEL, db, type Entry, type Meal } from '../db'
@@ -20,6 +21,8 @@ export function Today() {
   const [adding, setAdding] = useState<Meal | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  // A meal to repeat, 'day' for the whole day, or null when the sheet is closed.
+  const [repeating, setRepeating] = useState<Meal | 'day' | null>(null)
   // Laptop: the docked add panel's meal, and a counter that refocuses its search.
   const [panelMeal, setPanelMeal] = useState<Meal>(mealForNow)
   const [panelFocus, setPanelFocus] = useState(0)
@@ -29,6 +32,7 @@ export function Today() {
   const closeAdd = useCallback(() => setAdding(null), [])
   const closeEdit = useCallback(() => setEditing(null), [])
   const closeCalendar = useCallback(() => setCalendarOpen(false), [])
+  const closeRepeat = useCallback(() => setRepeating(null), [])
 
   const list = entries ?? []
   const totals = sum(list.map((e) => scale(e.per100, e.grams)))
@@ -92,11 +96,16 @@ export function Today() {
           </button>
         )}
       </div>
-      {!laptop && !isToday && (
-        <button className="btn ghost small back-today" onClick={() => setDate(isoDate())}>
-          Volver a hoy
+      <div className="day-actions">
+        {!laptop && !isToday && (
+          <button className="btn ghost small" onClick={() => setDate(isoDate())}>
+            Volver a hoy
+          </button>
+        )}
+        <button className="btn ghost small" onClick={() => setRepeating('day')}>
+          <RepeatIcon /> Repetir un día
         </button>
-      )}
+      </div>
 
       <div className="today-grid">
         <div className="today-summary">
@@ -155,9 +164,14 @@ export function Today() {
                     })}
                   </ul>
                 )}
-                <button className="add-btn" onClick={() => startAdding(meal)}>
-                  <span aria-hidden="true">+</span> Añadir alimento
-                </button>
+                <div className="meal-actions">
+                  <button className="add-btn" onClick={() => startAdding(meal)}>
+                    <span aria-hidden="true">+</span> Añadir alimento
+                  </button>
+                  <button className="add-btn secondary" onClick={() => setRepeating(meal)}>
+                    <RepeatIcon /> Repetir
+                  </button>
+                </div>
               </section>
             )
           })}
@@ -198,10 +212,27 @@ export function Today() {
       {adding && <AddEntrySheet date={date} meal={adding} onClose={closeAdd} />}
       {editing && <EditEntrySheet entry={editing} onClose={closeEdit} />}
       {calendarOpen && <CalendarSheet date={date} onPick={setDate} onClose={closeCalendar} />}
+      {repeating && (
+        <RepeatSheet
+          date={date}
+          meal={repeating === 'day' ? undefined : repeating}
+          current={repeating === 'day' ? [] : list.filter((e) => e.meal === repeating)}
+          onClose={closeRepeat}
+        />
+      )}
     </div>
   )
 }
 
+
+function RepeatIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5" />
+      <path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5" />
+    </svg>
+  )
+}
 
 function amountText(e: Entry) {
   const s = e.amount.serving

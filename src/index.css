@@ -321,6 +321,12 @@ a {
   width: 100%;
 }
 
+.btn.wrap {
+  height: auto;
+  padding: 10px 18px;
+  white-space: normal;
+}
+
 .grow {
   flex: 1;
 }
@@ -2280,4 +2286,130 @@ kbd {
 
 .attribution a {
   color: inherit;
+}
+
+/* ---------- Repeat and saved meals ---------- */
+
+.day-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.meal-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meal-actions .add-btn {
+  width: auto;
+}
+
+.add-btn.secondary {
+  color: var(--muted);
+  padding-left: 8px;
+}
+
+.add-btn.secondary:hover {
+  color: var(--text);
+}
+
+/* minmax stops long food names from stretching the sheet sideways. */
+.repeat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.repeat section {
+  min-width: 0;
+}
+
+.repeat .group-title {
+  margin: 0 4px 6px;
+}
+
+.repeat .empty {
+  padding: 8px 4px;
+  text-align: left;
+}
+
+.save-set {
+  display: grid;
+  gap: 10px;
+}
+
+.repeat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.repeat-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.repeat-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.repeat-row {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 11px 4px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.repeat-row:hover {
+  background: var(--surface-2);
+}
+
+.repeat-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.repeat-name {
+  font-weight: 600;
+}
+
+.repeat-items {
+  overflow: hidden;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repeat-kcal {
+  flex: none;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1200px) {
+  .day-actions {
+    justify-content: flex-start;
+    margin: 0 0 10px;
+  }
+}
+
+.manual-code {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.scan-view.failed {
+  display: none;
 }

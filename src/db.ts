@@ -53,6 +53,18 @@ export interface Entry {
   createdAt: number
 }
 
+/** One logged food inside a saved meal, without the day it belonged to. */
+export type MealSetItem = Pick<Entry, 'foodId' | 'name' | 'per100' | 'grams' | 'amount'>
+
+/** A group of foods eaten together, logged in one go ("desayuno de siempre"). */
+export interface MealSet {
+  id: number
+  name: string
+  items: MealSetItem[]
+  createdAt: number
+  lastUsed?: number
+}
+
 export interface Setting {
   key: string
   value: unknown
@@ -72,6 +84,7 @@ const SERVING_ES: Record<string, string> = {
 export class BocadosDB extends Dexie {
   foods!: EntityTable<Food, 'id'>
   entries!: EntityTable<Entry, 'id'>
+  mealSets!: EntityTable<MealSet, 'id'>
   settings!: EntityTable<Setting, 'key'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
@@ -95,6 +108,8 @@ export class BocadosDB extends Dexie {
     if (seed) {
       // Version 3 indexes the barcode of products copied from Open Food Facts.
     this.version(3).stores({ foods: '++id, name, lastUsed, barcode' })
+    // Version 4 adds saved meals.
+    this.version(4).stores({ mealSets: '++id, name, lastUsed' })
     this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
