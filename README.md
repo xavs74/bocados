@@ -1,12 +1,12 @@
 # Bocado
 
-Log what you eat and see calories and macros against your daily goals.
+Apunta lo que comes y mira tus calorías y macros frente a tus objetivos. The interface is in Spanish.
 
-- **Today**: log foods per meal, see calories left and each macro's grams and share of calories against your targets.
-- **Foods**: your food list with values per 100 g and optional servings ("1 slice = 17 g"). Starts with the foods from the original spreadsheet.
-- **Goals**: a calorie target and a macro split by calories (carbs and protein 4 kcal/g, fat 9 kcal/g).
+- **Hoy**: log foods per meal. A ring shows calories left, split into one colour per macro, with each macro's grams against its target. With a calculated goal it also shows the day's deficit or excess against estimated daily burn.
+- **Alimentos**: your food list with values per 100 g and optional servings ("1 loncha = 17 g"). Starts with the foods from the original spreadsheet.
+- **Objetivos**: set daily calories by hand, or calculate them from sex, age, height, weight and activity (Mifflin-St Jeor or revised Harris-Benedict) plus a deficit or surplus. Macro split by calories on a bar that always adds up to 100 %.
 
-It's a local-first web app you can install: data lives in the browser (IndexedDB) on each device, and works offline. Use **Goals → Export/Import backup** to move data between devices.
+It's a local-first web app you can install: data lives in the browser (IndexedDB) on each device, and works offline. Use **Objetivos → Exportar/Importar copia** to move data between devices.
 
 ## Develop
 

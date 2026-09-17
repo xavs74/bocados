@@ -24,7 +24,7 @@ export function Sheet({ title, onClose, children, footer }: Props) {
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
         <header className="sheet-header">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
             <CloseIcon />
           </button>
         </header>

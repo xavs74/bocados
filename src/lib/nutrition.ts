@@ -1,12 +1,20 @@
+import type { Profile } from './energy'
+
 export const MACROS = ['carbs', 'protein', 'fat'] as const
 export type MacroKey = (typeof MACROS)[number]
 
 export const KCAL_PER_GRAM: Record<MacroKey, number> = { carbs: 4, protein: 4, fat: 9 }
 
 export const MACRO_LABEL: Record<MacroKey, string> = {
-  carbs: 'Carbs',
-  protein: 'Protein',
-  fat: 'Fat',
+  carbs: 'Carbohidratos',
+  protein: 'Proteínas',
+  fat: 'Grasas',
+}
+
+export const MACRO_SHORT: Record<MacroKey, string> = {
+  carbs: 'Carb',
+  protein: 'Prot',
+  fat: 'Grasa',
 }
 
 /** Energy and macros. For foods these are per 100 g; for entries, the eaten amount. */
@@ -21,6 +29,9 @@ export interface Goals {
   kcal: number
   /** Share of calories per macro, in percent. Sums to 100. */
   split: Record<MacroKey, number>
+  /** 'calculated' derives kcal from the profile; missing means the kcal were typed in. */
+  mode?: 'manual' | 'calculated'
+  profile?: Partial<Profile>
 }
 
 export const ZERO: Nutrients = { kcal: 0, carbs: 0, protein: 0, fat: 0 }

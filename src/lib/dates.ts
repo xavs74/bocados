@@ -1,3 +1,5 @@
+import { LOCALE } from './format'
+
 /** Local calendar date as YYYY-MM-DD. */
 export function isoDate(d: Date = new Date()): string {
   const y = d.getFullYear()
@@ -19,12 +21,16 @@ export function addDays(iso: string, days: number): string {
 
 export function dayLabel(iso: string): string {
   const today = isoDate()
-  if (iso === today) return 'Today'
-  if (iso === addDays(today, -1)) return 'Yesterday'
-  if (iso === addDays(today, 1)) return 'Tomorrow'
-  return parseIso(iso).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
+  if (iso === today) return 'Hoy'
+  if (iso === addDays(today, -1)) return 'Ayer'
+  if (iso === addDays(today, 1)) return 'Mañana'
+  return capitalize(parseIso(iso).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'short' }))
 }
 
 export function fullDate(iso: string): string {
-  return parseIso(iso).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+  return capitalize(parseIso(iso).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' }))
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }

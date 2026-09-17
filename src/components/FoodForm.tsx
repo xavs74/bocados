@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { db, type Food, type Serving } from '../db'
-import { kcal } from '../lib/format'
+import { inputNum, kcal, parseNum } from '../lib/format'
 import { kcalLooksWrong, macroKcal } from '../lib/nutrition'
 import { Sheet } from './Sheet'
 
@@ -13,17 +13,17 @@ interface Props {
 }
 
 const FIELDS = [
-  ['kcal', 'Energy', 'kcal'],
-  ['carbs', 'Carbs', 'g'],
-  ['protein', 'Protein', 'g'],
-  ['fat', 'Fat', 'g'],
+  ['kcal', 'Energía', 'kcal'],
+  ['carbs', 'Carbohidratos', 'g'],
+  ['protein', 'Proteínas', 'g'],
+  ['fat', 'Grasas', 'g'],
 ] as const
 
 type NumKey = (typeof FIELDS)[number][0]
 
-const toText = (n: number | undefined) => (n === undefined ? '' : String(n))
-const parse = (s: string) => Number(s.replace(',', '.'))
-const valid = (s: string) => s.trim() !== '' && Number.isFinite(parse(s)) && parse(s) >= 0
+const toText = (n: number | undefined) => (n === undefined ? '' : inputNum(n))
+const parse = parseNum
+const valid = (s: string) => Number.isFinite(parse(s)) && parse(s) >= 0
 
 export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }: Props) {
   const [name, setName] = useState(food?.name ?? initialName)
@@ -34,7 +34,7 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
     fat: toText(food?.fat),
   })
   const [servings, setServings] = useState<{ label: string; grams: string }[]>(
-    (food?.servings ?? []).map((s) => ({ label: s.label, grams: String(s.grams) })),
+    (food?.servings ?? []).map((s) => ({ label: s.label, grams: inputNum(s.grams) })),
   )
   const [touched, setTouched] = useState(false)
 
@@ -64,17 +64,17 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
 
   return (
     <Sheet
-      title={food ? 'Edit food' : 'New food'}
+      title={food ? 'Editar alimento' : 'Nuevo alimento'}
       onClose={onClose}
       footer={
         <div className="footer-row">
           {onDelete && (
             <button className="btn danger ghost" onClick={onDelete}>
-              Delete
+              Borrar
             </button>
           )}
           <button type="submit" form="food-form" className="btn primary grow">
-            {food ? 'Save changes' : 'Add food'}
+            {food ? 'Guardar cambios' : 'Crear alimento'}
           </button>
         </div>
       }
@@ -88,12 +88,12 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
         }}
       >
         <label className="field">
-          <span>Name</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} autoFocus={!food} aria-invalid={touched && !name.trim()} placeholder="e.g. Greek yogurt 0%" />
+          <span>Nombre</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} autoFocus={!food} aria-invalid={touched && !name.trim()} placeholder="p. ej. Yogur griego 0 %" />
         </label>
 
         <fieldset className="fieldset">
-          <legend>Per 100 g</legend>
+          <legend>Por cada 100 g</legend>
           <div className="grid-2">
             {FIELDS.map(([key, label, unit]) => (
               <label className="field" key={key}>
@@ -111,37 +111,37 @@ export function FoodForm({ food, initialName = '', onClose, onSaved, onDelete }:
           </div>
           {suspicious && (
             <p className="hint warn">
-              The macros add up to about {kcal(fromMacros)} kcal, not {kcal(nutrients.kcal)}. Worth checking the label.
+              Los macros suman unas {kcal(fromMacros)} kcal, no {kcal(nutrients.kcal)}. Revisa la etiqueta.
             </p>
           )}
         </fieldset>
 
         <fieldset className="fieldset">
-          <legend>Servings</legend>
-          <p className="hint">Optional. Lets you log "1 slice" instead of weighing it.</p>
+          <legend>Raciones</legend>
+          <p className="hint">Opcional. Así puedes apuntar «1 loncha» en vez de pesarla.</p>
           {servings.map((s, i) => (
             <div className="serving-row" key={i}>
               <input
-                aria-label="Serving name"
-                placeholder="1 slice"
+                aria-label="Nombre de la ración"
+                placeholder="1 loncha"
                 value={s.label}
                 onChange={(e) => setServings(servings.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
               />
               <input
-                aria-label="Grams per serving"
+                aria-label="Gramos por ración"
                 inputMode="decimal"
-                placeholder="grams"
+                placeholder="gramos"
                 value={s.grams}
                 onChange={(e) => setServings(servings.map((x, j) => (j === i ? { ...x, grams: e.target.value } : x)))}
               />
               <span className="muted">g</span>
-              <button type="button" className="icon-btn" aria-label="Remove serving" onClick={() => setServings(servings.filter((_, j) => j !== i))}>
+              <button type="button" className="icon-btn" aria-label="Quitar ración" onClick={() => setServings(servings.filter((_, j) => j !== i))}>
                 ×
               </button>
             </div>
           ))}
           <button type="button" className="btn ghost small" onClick={() => setServings([...servings, { label: '', grams: '' }])}>
-            + Add serving
+            + Añadir ración
           </button>
         </fieldset>
       </form>

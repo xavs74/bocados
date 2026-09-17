@@ -15,7 +15,7 @@ export async function exportBackup(): Promise<void> {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `bocado-backup-${data.exportedAt.slice(0, 10)}.json`
+  a.download = `bocado-copia-${data.exportedAt.slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -26,11 +26,11 @@ export async function importBackup(file: File): Promise<{ foods: number; entries
   try {
     data = JSON.parse(await file.text())
   } catch {
-    throw new Error("That file isn't valid JSON.")
+    throw new Error('Ese archivo no se puede leer.')
   }
   const b = data as Record<string, unknown>
   if (b?.format !== FORMAT || !Array.isArray(b.foods) || !Array.isArray(b.entries) || !Array.isArray(b.settings)) {
-    throw new Error("That file isn't a Bocado backup.")
+    throw new Error('Ese archivo no es una copia de Bocado.')
   }
   await db.transaction('rw', db.foods, db.entries, db.settings, async () => {
     await Promise.all([db.foods.clear(), db.entries.clear(), db.settings.clear()])

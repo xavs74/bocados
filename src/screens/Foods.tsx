@@ -14,7 +14,7 @@ export function Foods() {
   const shown = (foods ?? []).filter((f) => matches(f.name, query))
 
   async function remove(food: Food) {
-    if (!confirm(`Delete “${food.name}”? Days you already logged keep their numbers.`)) return
+    if (!confirm(`¿Borrar «${food.name}»? Los días ya registrados conservan sus datos.`)) return
     await db.foods.delete(food.id)
     setEditing(null)
   }
@@ -22,20 +22,20 @@ export function Foods() {
   return (
     <div className="foods">
       <div className="page-head">
-        <h1>Foods</h1>
+        <h1>Alimentos</h1>
         <button className="btn primary small" onClick={() => setEditing('new')}>
-          + New food
+          + Nuevo
         </button>
       </div>
       <div className="search sticky">
-        <input type="search" placeholder={`Search ${foods?.length ?? ''} foods`} value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search foods" />
+        <input type="search" placeholder={`Buscar entre ${foods?.length ?? ''} alimentos`} value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Buscar alimento" />
       </div>
 
       {foods && shown.length === 0 && (
         <div className="empty">
-          <p>No foods match “{query}”.</p>
+          <p>Ningún alimento coincide con «{query}».</p>
           <button className="btn ghost small" onClick={() => setEditing('new')}>
-            Create it
+            Crearlo
           </button>
         </div>
       )}
@@ -47,13 +47,13 @@ export function Foods() {
               <span className="food-name">
                 {f.name}
                 {kcalLooksWrong(f) && (
-                  <span className="badge warn" title="kcal don't match the macros">
-                    check
+                  <span className="badge warn" title="Las kcal no cuadran con los macros">
+                    revisar
                   </span>
                 )}
               </span>
               <span className="food-meta">
-                {kcal(f.kcal)} kcal · C {num(f.carbs)} · P {num(f.protein)} · F {num(f.fat)}
+                {kcal(f.kcal)} kcal · Carb {num(f.carbs)} · Prot {num(f.protein)} · Grasa {num(f.fat)}
                 {f.servings.length > 0 && <span className="muted"> · {f.servings.map((s) => s.label).join(', ')}</span>}
               </span>
             </button>

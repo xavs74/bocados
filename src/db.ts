@@ -26,10 +26,10 @@ export const MEALS = ['breakfast', 'lunch', 'snack', 'dinner'] as const
 export type Meal = (typeof MEALS)[number]
 
 export const MEAL_LABEL: Record<Meal, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  dinner: 'Dinner',
+  breakfast: 'Desayuno',
+  lunch: 'Comida',
+  snack: 'Merienda',
+  dinner: 'Cena',
 }
 
 /**
@@ -57,6 +57,13 @@ export interface Setting {
 // (130 g carbs, 234.5 g protein, 69.5 g fat) expressed as a calorie split.
 export const DEFAULT_GOALS: Goals = { kcal: 1700, split: { carbs: 25, protein: 45, fat: 30 } }
 
+const SERVING_ES: Record<string, string> = {
+  '1 unit': '1 unidad',
+  '1 bar': '1 barrita',
+  '1 slice': '1 loncha',
+  '1 cup': '1 taza',
+}
+
 export class BocadoDB extends Dexie {
   foods!: EntityTable<Food, 'id'>
   entries!: EntityTable<Entry, 'id'>
@@ -68,6 +75,17 @@ export class BocadoDB extends Dexie {
       foods: '++id, name, lastUsed',
       entries: '++id, date, foodId',
       settings: 'key',
+    })
+    // Version 2 translated the imported serving names to Spanish.
+    this.version(2).stores({}).upgrade(async (tx) => {
+      const rename = (s: Serving) => ({ ...s, label: SERVING_ES[s.label] ?? s.label })
+      await tx.table('foods').toCollection().modify((f: Food) => {
+        f.servings = f.servings.map(rename)
+        if (f.lastAmount?.serving) f.lastAmount.serving = rename(f.lastAmount.serving)
+      })
+      await tx.table('entries').toCollection().modify((e: Entry) => {
+        if (e.amount.serving) e.amount.serving = rename(e.amount.serving)
+      })
     })
     this.on('populate', async (tx) => {
       await tx.table('foods').bulkAdd(seedFoods)

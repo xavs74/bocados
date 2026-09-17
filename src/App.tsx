@@ -31,15 +31,15 @@ export default function App() {
           <Logo />
           <span>Bocado</span>
         </a>
-        <nav className="nav" aria-label="Main">
+        <nav className="nav" aria-label="Principal">
           <NavLink tab="today" current={tab} icon={<TodayIcon />}>
-            Today
+            Hoy
           </NavLink>
           <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
-            Foods
+            Alimentos
           </NavLink>
           <NavLink tab="goals" current={tab} icon={<GoalsIcon />}>
-            Goals
+            Objetivos
           </NavLink>
         </nav>
       </header>

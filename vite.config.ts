@@ -11,7 +11,8 @@ export default defineConfig({
       manifest: {
         name: 'Bocado',
         short_name: 'Bocado',
-        description: 'Log what you eat and see calories and macros against your goals.',
+        description: 'Apunta lo que comes y mira tus calorías y macros frente a tus objetivos.',
+        lang: 'es',
         theme_color: '#2f7d5b',
         background_color: '#f6f5f1',
         display: 'standalone',

@@ -2,7 +2,7 @@ import { MEALS, MEAL_LABEL, type Meal } from '../db'
 
 export function MealPicker({ value, onChange }: { value: Meal; onChange: (m: Meal) => void }) {
   return (
-    <div className="segmented" role="radiogroup" aria-label="Meal">
+    <div className="segmented" role="radiogroup" aria-label="Comida del día">
       {MEALS.map((m) => (
         <button
           key={m}

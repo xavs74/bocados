@@ -38,10 +38,10 @@ function EditEntryForm({ entry, servings, onClose }: { entry: Entry; servings: N
       footer={
         <div className="footer-row">
           <button className="btn danger ghost" onClick={remove}>
-            Remove
+            Quitar
           </button>
           <button type="submit" form="edit-entry" className="btn primary grow" disabled={!amount}>
-            Save
+            Guardar
           </button>
         </div>
       }

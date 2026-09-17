@@ -27,20 +27,20 @@ export function Today() {
   return (
     <div className="today">
       <div className="date-nav">
-        <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">
+        <button className="icon-btn" onClick={() => setDate(addDays(date, -1))} aria-label="Día anterior">
           <Chevron dir="left" />
         </button>
         <div className="date-label">
           <h1>{dayLabel(date)}</h1>
           <span className="muted">{fullDate(date)}</span>
         </div>
-        <button className="icon-btn" onClick={() => setDate(addDays(date, 1))} aria-label="Next day">
+        <button className="icon-btn" onClick={() => setDate(addDays(date, 1))} aria-label="Día siguiente">
           <Chevron dir="right" />
         </button>
       </div>
       {!isToday && (
         <button className="btn ghost small back-today" onClick={() => setDate(isoDate())}>
-          Back to today
+          Volver a hoy
         </button>
       )}
 
@@ -73,7 +73,7 @@ export function Today() {
                             <span className="entry-side">
                               <span className="entry-kcal">{kcal(n.kcal)}</span>
                               <span className="entry-macros muted">
-                                C {num(n.carbs)} · P {num(n.protein)} · F {num(n.fat)}
+                                Carb {num(n.carbs)} · Prot {num(n.protein)} · Grasa {num(n.fat)}
                               </span>
                             </span>
                           </button>
@@ -83,7 +83,7 @@ export function Today() {
                   </ul>
                 )}
                 <button className="add-btn" onClick={() => setAdding(meal)}>
-                  <span aria-hidden="true">+</span> Add food
+                  <span aria-hidden="true">+</span> Añadir alimento
                 </button>
               </section>
             )
@@ -91,7 +91,7 @@ export function Today() {
         </div>
       </div>
 
-      <button className="fab" onClick={() => setAdding(isToday ? mealForNow() : 'lunch')} aria-label="Add food">
+      <button className="fab" onClick={() => setAdding(isToday ? mealForNow() : 'lunch')} aria-label="Añadir alimento">
         +
       </button>
 

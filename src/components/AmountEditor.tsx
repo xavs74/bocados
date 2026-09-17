@@ -19,7 +19,7 @@ export function AmountEditor({ draft, onChange, servings, per100, autoFocus }: P
     <div className="amount-editor">
       <div className="amount-row">
         <label className="field grow">
-          <span>Amount</span>
+          <span>Cantidad</span>
           <input
             inputMode="decimal"
             value={draft.text}
@@ -36,9 +36,9 @@ export function AmountEditor({ draft, onChange, servings, per100, autoFocus }: P
           />
         </label>
         <label className="field">
-          <span>Unit</span>
+          <span>Unidad</span>
           <select value={draft.unit} onChange={(e) => onChange({ ...draft, unit: Number(e.target.value) })}>
-            <option value={-1}>grams</option>
+            <option value={-1}>gramos</option>
             {servings.map((s, i) => (
               <option key={i} value={i}>
                 {s.label} ({num(s.grams)} g)
@@ -56,13 +56,13 @@ export function AmountEditor({ draft, onChange, servings, per100, autoFocus }: P
               {amount.serving && <span className="muted"> · {grams(gramsOf(amount))}</span>}
             </div>
             <div className="preview-macros">
-              <span className="chip chip-carbs">C {num(n.carbs)} g</span>
-              <span className="chip chip-protein">P {num(n.protein)} g</span>
-              <span className="chip chip-fat">F {num(n.fat)} g</span>
+              <span className="chip chip-carbs">Carb {num(n.carbs)} g</span>
+              <span className="chip chip-protein">Prot {num(n.protein)} g</span>
+              <span className="chip chip-fat">Grasa {num(n.fat)} g</span>
             </div>
           </>
         ) : (
-          <span className="muted">Enter an amount above zero</span>
+          <span className="muted">Escribe una cantidad mayor que cero</span>
         )}
       </div>
     </div>

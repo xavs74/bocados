@@ -57,10 +57,10 @@ export function AddEntrySheet({ date, meal: initialMeal, onClose }: Props) {
         footer={
           <div className="footer-row">
             <button className="btn ghost" onClick={() => setFood(null)}>
-              Back
+              Atrás
             </button>
             <button type="submit" form="add-entry" className="btn primary grow" disabled={!amount}>
-              Add to {MEAL_LABEL[meal].toLowerCase()}
+              Añadir a {MEAL_LABEL[meal].toLowerCase()}
             </button>
           </div>
         }
@@ -81,15 +81,15 @@ export function AddEntrySheet({ date, meal: initialMeal, onClose }: Props) {
   }
 
   return (
-    <Sheet title={`Add to ${MEAL_LABEL[meal].toLowerCase()}`} onClose={onClose}>
+    <Sheet title={`Añadir a ${MEAL_LABEL[meal].toLowerCase()}`} onClose={onClose}>
       <div className="search">
         <input
           type="search"
-          placeholder="Search foods"
+          placeholder="Buscar alimento"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
-          aria-label="Search foods"
+          aria-label="Buscar alimento"
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.currentTarget.blur()
           }}
@@ -125,17 +125,17 @@ function FoodResults({ query, onPick, onCreate }: { query: string; onPick: (f: F
         <span className="plus" aria-hidden="true">+</span>
         {query.trim() ? (
           <span>
-            Create “<strong>{query.trim()}</strong>”
+            Crear «<strong>{query.trim()}</strong>»
           </span>
         ) : (
-          <span>Create a new food</span>
+          <span>Crear un alimento nuevo</span>
         )}
       </button>
-      {recent.length > 0 && <FoodGroup title="Recent" foods={recent} onPick={onPick} />}
+      {recent.length > 0 && <FoodGroup title="Recientes" foods={recent} onPick={onPick} />}
       {rest.length > 0 ? (
-        <FoodGroup title={query.trim() ? `${rest.length} found` : 'All foods'} foods={rest} onPick={onPick} />
+        <FoodGroup title={query.trim() ? `${rest.length} encontrados` : 'Todos los alimentos'} foods={rest} onPick={onPick} />
       ) : (
-        <p className="empty">No foods match “{query}”.</p>
+        <p className="empty">Ningún alimento coincide con «{query}».</p>
       )}
     </div>
   )
@@ -151,7 +151,7 @@ function FoodGroup({ title, foods, onPick }: { title: string; foods: Food[]; onP
             <button className="food-row" onClick={() => onPick(f)}>
               <span className="food-name">{f.name}</span>
               <span className="food-meta">
-                {kcal(f.kcal)} kcal · C {num(f.carbs)} · P {num(f.protein)} · F {num(f.fat)}
+                {kcal(f.kcal)} kcal · Carb {num(f.carbs)} · Prot {num(f.protein)} · Grasa {num(f.fat)}
                 <span className="muted"> /100 g</span>
               </span>
             </button>
