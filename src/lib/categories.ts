@@ -21,13 +21,16 @@ export const OWN_CATEGORY = 'Mis alimentos'
 /** Products copied from Open Food Facts; not part of the built-in list. */
 export const SUPERMARKET_CATEGORY = 'Supermercado'
 
+/** Foods that mirror a recipe. */
+export const RECIPE_CATEGORY = 'Recetas'
+
 export function categoryOf(food: { category?: string }): string {
   return food.category || OWN_CATEGORY
 }
 
 /** Groups foods by category: own foods first (they're the ones people look for), then the built-in order. */
 export function groupByCategory<T extends { category?: string }>(foods: T[]): { category: string; foods: T[] }[] {
-  const order = [OWN_CATEGORY, SUPERMARKET_CATEGORY, ...CATEGORIES] as string[]
+  const order = [RECIPE_CATEGORY, OWN_CATEGORY, SUPERMARKET_CATEGORY, ...CATEGORIES] as string[]
   const groups = new Map<string, T[]>()
   for (const f of foods) {
     const c = categoryOf(f)

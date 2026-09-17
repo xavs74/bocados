@@ -23,6 +23,8 @@ export interface Food extends Nutrients {
   /** Set for products copied from Open Food Facts. */
   barcode?: string
   source?: string
+  /** Set on the food that mirrors a recipe, so editing opens the recipe. */
+  recipeId?: number
   lastUsed?: number
   lastAmount?: Amount
 }
@@ -50,6 +52,24 @@ export interface Entry {
   per100: Nutrients
   grams: number
   amount: Amount
+  createdAt: number
+}
+
+/** One ingredient of a recipe, with the amount used in the whole recipe. */
+export type Ingredient = Pick<Entry, 'foodId' | 'name' | 'per100' | 'grams' | 'amount'>
+
+/**
+ * A dish made of foods. Bocados keeps a food in sync with it (values per 100 g
+ * plus a "1 ración" serving), so a recipe is logged like any other food.
+ */
+export interface Recipe {
+  id: number
+  name: string
+  /** How many servings the whole recipe makes. */
+  servings: number
+  ingredients: Ingredient[]
+  /** The food that mirrors this recipe. */
+  foodId?: number
   createdAt: number
 }
 
@@ -85,6 +105,7 @@ export class BocadosDB extends Dexie {
   foods!: EntityTable<Food, 'id'>
   entries!: EntityTable<Entry, 'id'>
   mealSets!: EntityTable<MealSet, 'id'>
+  recipes!: EntityTable<Recipe, 'id'>
   settings!: EntityTable<Setting, 'key'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
@@ -110,6 +131,8 @@ export class BocadosDB extends Dexie {
     this.version(3).stores({ foods: '++id, name, lastUsed, barcode' })
     // Version 4 adds saved meals.
     this.version(4).stores({ mealSets: '++id, name, lastUsed' })
+    // Version 5 adds recipes.
+    this.version(5).stores({ recipes: '++id, name' })
     this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })

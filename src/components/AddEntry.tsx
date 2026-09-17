@@ -201,7 +201,7 @@ interface SearchProps {
   autoFocus: boolean
 }
 
-function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus }: SearchProps) {
+export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus }: SearchProps) {
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
   const [active, setActive] = useState(0)
   // Enter picks the highlighted food once there's a query or the arrows were used.

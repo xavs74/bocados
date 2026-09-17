@@ -2413,3 +2413,108 @@ kbd {
 .scan-view.failed {
   display: none;
 }
+
+/* ---------- Recipes ---------- */
+
+.choose-new {
+  display: grid;
+  gap: 10px;
+}
+
+.choice-card {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: left;
+}
+
+.choice-card:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.choice-card .muted {
+  font-size: 0.85rem;
+}
+
+.ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ingredients li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.ingredients li + li {
+  border-top: 1px solid var(--border);
+}
+
+.ing-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ing-name {
+  overflow: hidden;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ing-main .muted {
+  font-size: 0.82rem;
+}
+
+.ing-kcal {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.recipe-totals {
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.recipe-totals h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.recipe-kcal {
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recipe-kcal strong {
+  font-size: 1.6rem;
+}
+
+.recipe-macros {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 0.88rem;
+}
+
+.recipe-macros li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}

@@ -2,8 +2,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useMemo, useState } from 'react'
 import { BarcodeIcon, ProductResults } from '../components/AddEntry'
 import { FoodForm } from '../components/FoodForm'
+import { RecipeForm } from '../components/RecipeForm'
+import { Sheet } from '../components/Sheet'
 import { ScanSheet } from '../components/ScanSheet'
-import { db, type Food } from '../db'
+import { db, type Food, type Recipe } from '../db'
 import { addMissingBasicFoods, missingBasicFoods } from '../lib/basicFoods'
 import { categoryOf, groupByCategory } from '../lib/categories'
 import { kcal, matches, num } from '../lib/format'
@@ -20,11 +22,22 @@ export function Foods() {
   const [scanning, setScanning] = useState(false)
   const [added, setAdded] = useState<string | null>(null)
   const [scannedBarcode, setScannedBarcode] = useState<string | undefined>()
+  // 'choose' shows what to create; 'new' is a new recipe; a Recipe is an edit.
+  const [recipe, setRecipe] = useState<Recipe | 'new' | 'choose' | null>(null)
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
+  const recipes = useLiveQuery(() => db.recipes.toArray(), [])
   const close = useCallback(() => {
     setEditing(null)
     setScannedBarcode(undefined)
   }, [])
+  const closeRecipe = useCallback(() => setRecipe(null), [])
+
+  /** Recipe foods open their recipe instead of the food form. */
+  function open(food: Food) {
+    const linked = food.recipeId ? recipes?.find((r) => r.id === food.recipeId) : undefined
+    if (linked) setRecipe(linked)
+    else setEditing(food)
+  }
 
   const searching = query.trim() !== ''
   const shown = useMemo(() => (foods ?? []).filter((f) => matches(f.name, query)), [foods, query])
@@ -81,7 +94,7 @@ export function Foods() {
               <button className="btn ghost small" onClick={() => setSelected(new Set())} disabled={!foods?.length}>
                 Seleccionar
               </button>
-              <button className="btn primary small" onClick={() => setEditing('new')}>
+              <button className="btn primary small" onClick={() => setRecipe('choose')}>
                 + Nuevo
               </button>
             </>
@@ -150,14 +163,14 @@ export function Foods() {
             </div>
           )}
           {searching ? (
-            shown.length > 0 && <FoodList foods={shown} selected={selected} showCategory laptop={laptop} onToggle={toggle} onOpen={setEditing} />
+            shown.length > 0 && <FoodList foods={shown} selected={selected} showCategory laptop={laptop} onToggle={toggle} onOpen={open} />
           ) : (
             groups.map((g) => (
               <section key={g.category} id={`cat-${slug(g.category)}`} className="food-group" aria-label={g.category}>
                 <h2 className="group-title">
                   {g.category} <span className="muted">· {g.foods.length}</span>
                 </h2>
-                <FoodList foods={g.foods} selected={selected} laptop={laptop} onToggle={toggle} onOpen={setEditing} />
+                <FoodList foods={g.foods} selected={selected} laptop={laptop} onToggle={toggle} onOpen={open} />
               </section>
             ))
           )}
@@ -190,6 +203,30 @@ export function Foods() {
         </a>{' '}
         (licencia ODbL).
       </p>
+
+      {recipe === 'choose' && (
+        <Sheet title="¿Qué quieres crear?" onClose={closeRecipe}>
+          <div className="choose-new">
+            <button
+              className="choice-card"
+              onClick={() => {
+                setRecipe(null)
+                setEditing('new')
+              }}
+            >
+              <strong>Un alimento</strong>
+              <span className="muted">Con sus valores por 100 g, como los de un envase.</span>
+            </button>
+            <button className="choice-card" onClick={() => setRecipe('new')}>
+              <strong>Una receta</strong>
+              <span className="muted">Varios alimentos y las raciones que salen. Se apunta como «1 ración».</span>
+            </button>
+          </div>
+        </Sheet>
+      )}
+
+      {recipe === 'new' && <RecipeForm onClose={closeRecipe} />}
+      {recipe && recipe !== 'new' && recipe !== 'choose' && <RecipeForm recipe={recipe} onClose={closeRecipe} />}
 
       {scanning && (
         <ScanSheet
