@@ -59,14 +59,16 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   background: var(--bg);
-  min-height: 100dvh;
-}
-
-body.sheet-open {
-  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 h1,
@@ -106,23 +108,30 @@ a {
 
 /* ---------- Layout ---------- */
 
+/*
+ * App shell: the page itself never scrolls; only .main does. Fixed or sticky
+ * bars on a scrolling page drift on mobile browsers as their toolbars show and
+ * hide, so the header and tab bar are ordinary grid rows instead.
+ */
 .app {
-  min-height: 100dvh;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'top nav'
+    'main main';
+  background: var(--bg);
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  grid-area: top;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   padding: 10px 20px;
   padding-top: max(10px, env(safe-area-inset-top));
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding-left: max(20px, env(safe-area-inset-left));
 }
 
 .brand {
@@ -142,8 +151,13 @@ a {
 }
 
 .nav {
+  grid-area: nav;
   display: flex;
+  align-items: center;
   gap: 4px;
+  padding: 10px 20px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-right: max(20px, env(safe-area-inset-right));
 }
 
 .nav-link {
@@ -167,31 +181,39 @@ a {
 }
 
 .main {
+  grid-area: main;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-inner {
   max-width: 1040px;
   margin: 0 auto;
   padding: 8px 20px 48px;
 }
 
 @media (max-width: 719px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'top'
+      'main'
+      'nav';
+  }
+
   .topbar {
     padding: 8px 16px;
     padding-top: max(8px, env(safe-area-inset-top));
-    /* A backdrop-filter would make it the containing block for the fixed tab bar below. */
-    background: var(--bg);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 
   .nav {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
     justify-content: space-around;
     gap: 0;
     height: calc(var(--nav-h) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
+    padding: 0 0 env(safe-area-inset-bottom);
     background: var(--surface);
     border-top: 1px solid var(--border);
   }
@@ -210,8 +232,9 @@ a {
     background: none;
   }
 
-  .main {
-    padding: 4px 16px calc(var(--nav-h) + 96px + env(safe-area-inset-bottom));
+  .main-inner {
+    /* Room for the floating add button above the tab bar. */
+    padding: 4px 16px 96px;
   }
 }
 
@@ -371,6 +394,8 @@ input[type='range'] {
 
 .input-suffix input,
 .input-suffix input:focus {
+  /* Inputs have a built-in minimum width; without this they push the unit out of the box. */
+  min-width: 0;
   border: 0;
   box-shadow: none;
   background: transparent;
@@ -412,7 +437,7 @@ input[type='range'] {
 
 .search.sticky {
   position: sticky;
-  top: 60px;
+  top: 0;
   z-index: 5;
   padding: 4px 0 12px;
   background: var(--bg);
@@ -476,7 +501,7 @@ input[type='range'] {
 
   .today-summary {
     position: sticky;
-    top: 76px;
+    top: 16px;
   }
 }
 
@@ -1145,10 +1170,54 @@ input[type='range'] {
 }
 
 .presets {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin: 14px 0 18px;
+}
+
+.preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: center;
+}
+
+.preset:hover {
+  background: var(--surface-2);
+}
+
+.preset.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.preset-name {
+  font-size: 0.85rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.preset-split {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.preset-split span {
+  color: color-mix(in srgb, var(--c) 75%, var(--text));
+  white-space: nowrap;
 }
 
 .calculator {
@@ -1158,16 +1227,13 @@ input[type='range'] {
 
 .grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.grid-3 .input-suffix {
-  padding-right: 10px;
-}
-
 .grid-3 input:not([type='range']) {
-  padding: 0 4px 0 12px;
+  padding: 0 10px;
+  text-align: center;
 }
 
 .choice-list {
@@ -1252,16 +1318,18 @@ input[type='range'] {
 
 .split-editor {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
 .split-bar {
   position: relative;
   display: flex;
+  min-width: 0;
   height: 44px;
   border-radius: 12px;
-  overflow: visible;
   touch-action: none;
+  -webkit-user-select: none;
   user-select: none;
   cursor: ew-resize;
 }
@@ -1334,16 +1402,23 @@ input[type='range'] {
 
 .split-row {
   display: grid;
-  grid-template-columns: 1fr auto 56px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .split-label {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-weight: 650;
+}
+
+.split-label > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .stepper {
@@ -1369,7 +1444,7 @@ input[type='range'] {
 .pct-input {
   display: flex;
   align-items: center;
-  width: 70px;
+  width: 64px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding-right: 8px;
@@ -1381,6 +1456,7 @@ input[type='range'] {
 
 .pct-input input,
 .pct-input input:focus {
+  min-width: 0;
   min-height: 40px;
   padding: 0 2px 0 8px;
   border: 0;
@@ -1395,7 +1471,8 @@ input[type='range'] {
 }
 
 .split-grams {
-  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 

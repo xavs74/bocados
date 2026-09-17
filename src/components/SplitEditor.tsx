@@ -26,7 +26,10 @@ export function SplitEditor({ split, kcal, onChange }: Props) {
           <li key={m} className={`split-row macro-${m}`}>
             <span className="split-label">
               <span className="swatch" aria-hidden="true" />
-              {MACRO_LABEL[m]}
+              <span>
+                {MACRO_LABEL[m]}
+                <span className="split-grams muted">{Math.round(grams[m])} g al día</span>
+              </span>
             </span>
             <div className="stepper">
               <button type="button" className="step-btn" aria-label={`Menos ${MACRO_LABEL[m].toLowerCase()}`} onClick={() => onChange(rebalance(split, m, split[m] - STEP))}>
@@ -37,7 +40,6 @@ export function SplitEditor({ split, kcal, onChange }: Props) {
                 +
               </button>
             </div>
-            <span className="split-grams muted">{Math.round(grams[m])} g</span>
           </li>
         ))}
       </ul>
@@ -119,11 +121,8 @@ function SplitBar({ split, onChange }: { split: Split; onChange: (s: Split) => v
     >
       {MACROS.map((m: MacroKey) => (
         <div key={m} className={`split-seg macro-${m}`} style={{ width: `${split[m]}%` }}>
-          {split[m] >= 12 && (
-            <span>
-              {MACRO_SHORT[m]} {pct(split[m])}
-            </span>
-          )}
+          {/* Narrow segments only have room for the number. */}
+          {split[m] >= 10 && <span>{split[m] >= 24 ? `${MACRO_SHORT[m]} ${pct(split[m])}` : pct(split[m])}</span>}
         </div>
       ))}
       {([0, 1] as const).map((d) => (

@@ -15,9 +15,11 @@ import {
 interface Props {
   totals: Nutrients
   goals: Goals
+  /** A finished day: its balance is what was eaten, not a forecast. */
+  isPast: boolean
 }
 
-export function Summary({ totals, goals }: Props) {
+export function Summary({ totals, goals, isPast }: Props) {
   const remaining = goals.kcal - totals.kcal
   const progress = goals.kcal > 0 ? totals.kcal / goals.kcal : 0
   const split = calorieSplit(totals)
@@ -48,7 +50,7 @@ export function Summary({ totals, goals }: Props) {
         ))}
       </ul>
 
-      {burn !== null && <Balance eaten={totals.kcal} burn={burn} />}
+      {burn !== null && <Balance eaten={totals.kcal} goal={goals.kcal} burn={burn} isPast={isPast} />}
 
       <ul className="macro-list">
         {MACROS.map((m) => {
@@ -101,14 +103,28 @@ function statusOf(hasFood: boolean, actual: number, target: number): Status {
   return actual > target ? 'high' : 'low'
 }
 
-function Balance({ eaten, burn }: { eaten: number; burn: number }) {
-  const diff = eaten - burn
+/**
+ * Deficit or surplus against the estimated daily burn. Comparing the burn with
+ * what's been eaten so far would show a huge deficit every morning, so until
+ * the day is over it assumes you'll eat up to your goal (or what you already
+ * ate, if that's more).
+ */
+function Balance({ eaten, goal, burn, isPast }: { eaten: number; goal: number; burn: number; isPast: boolean }) {
+  const expected = isPast ? eaten : Math.max(eaten, goal)
+  const diff = Math.round(expected - burn)
+  const kind = diff > 0 ? 'Exceso' : 'Déficit'
   return (
     <p className="balance">
       Gasto estimado <strong>{kcal(burn)} kcal</strong>
       <span className="balance-sep"> · </span>
       <span className={diff > 0 ? 'surplus' : 'deficit'}>
-        {diff > 0 ? 'Exceso' : 'Déficit'} de <strong>{kcal(Math.abs(diff))} kcal</strong>
+        {diff === 0 ? 'Sin déficit ni exceso' : isPast ? `${kind} del día` : `${kind} previsto`}
+        {diff !== 0 && (
+          <>
+            {' '}
+            <strong>{kcal(Math.abs(diff))} kcal</strong>
+          </>
+        )}
       </span>
     </p>
   )

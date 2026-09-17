@@ -46,7 +46,7 @@ export function Today() {
 
       <div className="today-grid">
         <div className="today-summary">
-          <Summary totals={totals} goals={goals} />
+          <Summary totals={totals} goals={goals} isPast={date < isoDate()} />
         </div>
 
         <div className="meals">

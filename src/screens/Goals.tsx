@@ -16,13 +16,14 @@ import {
   type Profile,
 } from '../lib/energy'
 import { LOCALE, inputNum, kcal, parseNum } from '../lib/format'
-import type { Goals as GoalsT } from '../lib/nutrition'
+import { MACROS, MACRO_SHORT, type Goals as GoalsT } from '../lib/nutrition'
 import type { Split } from '../lib/split'
 
+// Each preset leads with the macro in its name, so the difference is obvious.
 const PRESETS: { name: string; split: Split }[] = [
-  { name: 'Equilibrado', split: { carbs: 45, protein: 25, fat: 30 } },
-  { name: 'Alto en proteína', split: { carbs: 35, protein: 35, fat: 30 } },
-  { name: 'Bajo en carbohidratos', split: { carbs: 25, protein: 40, fat: 35 } },
+  { name: 'Equilibrado', split: { carbs: 50, protein: 20, fat: 30 } },
+  { name: 'Alto en proteína', split: { carbs: 35, protein: 40, fat: 25 } },
+  { name: 'Bajo en carbohidratos', split: { carbs: 20, protein: 35, fat: 45 } },
 ]
 
 export function Goals() {
@@ -148,11 +149,21 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
         <h2 className="section-title">Reparto de macros</h2>
         <p className="hint">Qué parte de tus calorías viene de cada macro. Carbohidratos y proteínas tienen 4 kcal por gramo; las grasas, 9.</p>
         <div className="presets">
-          {PRESETS.map((p) => (
-            <button key={p.name} type="button" className="btn ghost small" onClick={() => update({ ...goals, split: p.split })}>
-              {p.name}
-            </button>
-          ))}
+          {PRESETS.map((p) => {
+            const active = MACROS.every((m) => p.split[m] === goals.split[m])
+            return (
+              <button key={p.name} type="button" className={`preset ${active ? 'active' : ''}`} aria-pressed={active} onClick={() => update({ ...goals, split: p.split })}>
+                <span className="preset-name">{p.name}</span>
+                <span className="preset-split">
+                  {MACROS.map((m) => (
+                    <span key={m} className={`macro-${m}`}>
+                      {MACRO_SHORT[m]} {p.split[m]}
+                    </span>
+                  ))}
+                </span>
+              </button>
+            )
+          })}
         </div>
         <SplitEditor split={goals.split} kcal={goals.kcal} onChange={(split) => update({ ...goals, split })} />
       </section>
@@ -160,10 +171,11 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
   )
 }
 
+// Units go in the label: three fields share a phone-width row, too narrow for a suffix inside each box.
 const NUM_FIELDS = [
-  ['age', 'Edad', 'años'],
-  ['heightCm', 'Altura', 'cm'],
-  ['weightKg', 'Peso', 'kg'],
+  ['age', 'Edad (años)'],
+  ['heightCm', 'Altura (cm)'],
+  ['weightKg', 'Peso (kg)'],
 ] as const
 
 function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
@@ -196,21 +208,18 @@ function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange
       </div>
 
       <div className="grid-3">
-        {NUM_FIELDS.map(([key, label, unit]) => (
+        {NUM_FIELDS.map(([key, label]) => (
           <label className="field" key={key}>
             <span>{label}</span>
-            <div className="input-suffix">
-              <input
-                inputMode="decimal"
-                value={texts[key]}
-                onChange={(e) => {
-                  setTexts({ ...texts, [key]: e.target.value })
-                  const v = parseNum(e.target.value)
-                  set({ [key]: Number.isFinite(v) ? v : undefined })
-                }}
-              />
-              <span>{unit}</span>
-            </div>
+            <input
+              inputMode="decimal"
+              value={texts[key]}
+              onChange={(e) => {
+                setTexts({ ...texts, [key]: e.target.value })
+                const v = parseNum(e.target.value)
+                set({ [key]: Number.isFinite(v) ? v : undefined })
+              }}
+            />
           </label>
         ))}
       </div>

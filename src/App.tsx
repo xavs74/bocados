@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Foods } from './screens/Foods'
 import { Goals } from './screens/Goals'
 import { Today } from './screens/Today'
@@ -13,6 +13,7 @@ function tabFromHash(): Tab {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(tabFromHash)
+  const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const onHash = () => setTab(tabFromHash())
@@ -21,7 +22,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
+    mainRef.current?.scrollTo(0, 0)
   }, [tab])
 
   return (
@@ -31,22 +32,25 @@ export default function App() {
           <Logo />
           <span>Bocado</span>
         </a>
-        <nav className="nav" aria-label="Principal">
-          <NavLink tab="today" current={tab} icon={<TodayIcon />}>
-            Hoy
-          </NavLink>
-          <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
-            Alimentos
-          </NavLink>
-          <NavLink tab="goals" current={tab} icon={<GoalsIcon />}>
-            Objetivos
-          </NavLink>
-        </nav>
       </header>
-      <main className="main">
-        {tab === 'today' && <Today />}
-        {tab === 'foods' && <Foods />}
-        {tab === 'goals' && <Goals />}
+    <nav className="nav" aria-label="Principal">
+        <NavLink tab="today" current={tab} icon={<TodayIcon />}>
+          Hoy
+        </NavLink>
+        <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
+          Alimentos
+        </NavLink>
+        <NavLink tab="goals" current={tab} icon={<GoalsIcon />}>
+          Objetivos
+        </NavLink>
+      </nav>
+      {/* Only this area scrolls, so the header and tab bar never move with the page. */}
+      <main className="main" ref={mainRef}>
+        <div className="main-inner">
+          {tab === 'today' && <Today />}
+          {tab === 'foods' && <Foods />}
+          {tab === 'goals' && <Goals />}
+        </div>
       </main>
     </div>
   )
