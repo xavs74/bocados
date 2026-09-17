@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useState } from 'react'
 import { Chevron } from '../components/Chevron'
+import { ImportPlanSheet } from '../components/ImportPlanSheet'
 import { PickFoodSheet } from '../components/PickFoodSheet'
 import { Sheet } from '../components/Sheet'
 import { ShoppingSheet } from '../components/ShoppingSheet'
@@ -15,12 +16,14 @@ export function Plan() {
   const [adding, setAdding] = useState<{ date: string; meal: Meal } | null>(null)
   const [dayMenu, setDayMenu] = useState<string | null>(null)
   const [shopping, setShopping] = useState(false)
+  const [importing, setImporting] = useState(false)
   const goals = useGoals()
   const planned = useLiveQuery(() => plannedBetween(start, addDays(start, 6)), [start])
 
   const closeAdd = useCallback(() => setAdding(null), [])
   const closeMenu = useCallback(() => setDayMenu(null), [])
   const closeShopping = useCallback(() => setShopping(false), [])
+  const closeImport = useCallback(() => setImporting(false), [])
 
   const week = groupWeek(start, planned ?? [])
   const total = plannedTotals(planned ?? [])
@@ -50,6 +53,9 @@ export function Plan() {
         <button className="btn ghost small" onClick={() => copyPlannedWeek(addDays(start, -7), start)}>
           Copiar semana anterior
         </button>
+        <button className="btn ghost small" onClick={() => setImporting(true)}>
+          Importar plan
+        </button>
         <button className="btn ghost small" onClick={() => setShopping(true)}>
           Lista de la compra
         </button>
@@ -62,7 +68,7 @@ export function Plan() {
 
       {planned && planned.length === 0 && (
         <p className="empty">
-          Nada planificado todavía. Añade alimentos a cualquier comida, copia la semana anterior o planifica lo que ya comiste.
+          Nada planificado todavía. Añade alimentos a cualquier comida, copia la semana anterior, planifica lo que ya comiste o importa un plan hecho con un asistente.
         </p>
       )}
 
@@ -135,6 +141,7 @@ export function Plan() {
 
       {dayMenu && <DayMenu date={dayMenu} weekStart={start} onClose={closeMenu} />}
       {shopping && <ShoppingSheet weekStart={start} onClose={closeShopping} />}
+      {importing && <ImportPlanSheet weekStart={start} onClose={closeImport} />}
     </div>
   )
 }

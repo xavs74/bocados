@@ -2752,3 +2752,175 @@ kbd {
     justify-content: flex-start;
   }
 }
+
+/* ---------- Importing a plan ---------- */
+
+.import {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.prompt-box {
+  max-height: 260px;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.paste-box {
+  width: 100%;
+  min-height: 180px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.paste-box:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+  outline: none;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.check-row input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  accent-color: var(--brand);
+}
+
+.import-issues {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.import-issues ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.import-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.import-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 56px auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.import-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.import-list .unmatched .import-name {
+  color: var(--warn);
+}
+
+.import-list .skipped {
+  opacity: 0.45;
+}
+
+.import-list .skipped .import-name {
+  text-decoration: line-through;
+}
+
+.import-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.import-meal {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.import-name {
+  overflow: hidden;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-from {
+  font-size: 0.76rem;
+}
+
+.import-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding-right: 8px;
+}
+
+.import-amount input,
+.import-amount input:focus {
+  min-height: 38px;
+  padding: 0 2px 0 8px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-kcal {
+  text-align: right;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-day-total {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow screens: the food gets its own line, the controls sit underneath. */
+@media (max-width: 560px) {
+  .import-list li {
+    grid-template-columns: 78px minmax(0, 1fr) auto auto;
+    row-gap: 4px;
+    padding: 10px 0;
+  }
+
+  .import-main {
+    grid-column: 1 / -1;
+  }
+
+  .import-name {
+    white-space: normal;
+  }
+
+  .import-kcal {
+    text-align: left;
+  }
+}
