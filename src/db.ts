@@ -85,6 +85,19 @@ export interface MealSet {
   lastUsed?: number
 }
 
+/** A food planned for a day and meal, before it's actually eaten. */
+export interface Planned {
+  id: number
+  date: string
+  meal: Meal
+  foodId: number
+  name: string
+  per100: Nutrients
+  grams: number
+  amount: Amount
+  createdAt: number
+}
+
 export interface Setting {
   key: string
   value: unknown
@@ -106,6 +119,7 @@ export class BocadosDB extends Dexie {
   entries!: EntityTable<Entry, 'id'>
   mealSets!: EntityTable<MealSet, 'id'>
   recipes!: EntityTable<Recipe, 'id'>
+  planned!: EntityTable<Planned, 'id'>
   settings!: EntityTable<Setting, 'key'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
@@ -133,6 +147,8 @@ export class BocadosDB extends Dexie {
     this.version(4).stores({ mealSets: '++id, name, lastUsed' })
     // Version 5 adds recipes.
     this.version(5).stores({ recipes: '++id, name' })
+    // Version 6 adds the weekly plan.
+    this.version(6).stores({ planned: '++id, date' })
     this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })

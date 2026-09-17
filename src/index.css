@@ -2518,3 +2518,237 @@ kbd {
   gap: 6px;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Weekly plan ---------- */
+
+.week {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.day {
+  padding: 4px 0 10px;
+}
+
+.day.today {
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--border));
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 4px 12px;
+}
+
+.day-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-size: 1rem;
+}
+
+.day-title:hover {
+  background: var(--surface-2);
+}
+
+.day-kcal {
+  padding-right: 10px;
+  font-size: 0.88rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-kcal.over {
+  color: var(--warn);
+}
+
+.plan-meal {
+  padding: 2px 12px;
+}
+
+.plan-meal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.icon-btn.small {
+  width: 30px;
+  height: 30px;
+  font-size: 1.2rem;
+}
+
+.plan-items {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.plan-items li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plan-name {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-amount {
+  flex: none;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-total {
+  margin: 16px 4px 0;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* Planned foods inside the day screen */
+
+.planned-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.planned-items li {
+  display: flex;
+  align-items: center;
+  padding-right: 10px;
+}
+
+.planned-row {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 18px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.planned-row:hover {
+  background: var(--brand-soft);
+}
+
+.planned-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.planned-row .entry-name {
+  color: var(--muted);
+}
+
+.tick {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--brand);
+  border-radius: 50%;
+}
+
+.planned-row:hover .tick {
+  background: var(--brand)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 15px no-repeat;
+}
+
+.add-btn.secondary.eat-all {
+  color: var(--brand);
+  font-weight: 650;
+}
+
+/* Shopping list */
+
+.shopping {
+  display: grid;
+  gap: 4px;
+}
+
+.shopping-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shopping-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.shopping-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 4px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.shopping-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.shopping-amount {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.shopping-list .bought button {
+  opacity: 0.55;
+}
+
+.shopping-list .bought .shopping-name {
+  text-decoration: line-through;
+}
+
+.shopping-list .bought .check {
+  border-color: var(--brand);
+  background: var(--brand)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 16px no-repeat;
+}
+
+@media (min-width: 720px) {
+  .week {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .week {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .plan .date-nav {
+    justify-content: flex-start;
+  }
+}

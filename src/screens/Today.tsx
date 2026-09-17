@@ -13,6 +13,7 @@ import { addDays, dayLabel, fullDate, isoDate } from '../lib/dates'
 import { grams, kcal, num } from '../lib/format'
 import { mealForNow } from '../lib/meals'
 import { scale, sum } from '../lib/nutrition'
+import { eatPlanned, eatPlannedMeal, plannedBetween } from '../lib/plan'
 import { useIsLaptop } from '../lib/useMediaQuery'
 
 export function Today() {
@@ -28,6 +29,7 @@ export function Today() {
   const [panelFocus, setPanelFocus] = useState(0)
   const goals = useGoals()
   const entries = useLiveQuery(() => db.entries.where('date').equals(date).sortBy('createdAt'), [date])
+  const planned = useLiveQuery(() => plannedBetween(date, date), [date])
 
   const closeAdd = useCallback(() => setAdding(null), [])
   const closeEdit = useCallback(() => setEditing(null), [])
@@ -120,6 +122,7 @@ export function Today() {
         <div className="meals">
           {MEALS.map((meal) => {
             const items = list.filter((e) => e.meal === meal)
+            const toEat = (planned ?? []).filter((p) => p.meal === meal)
             const mealTotals = sum(items.map((e) => scale(e.per100, e.grams)))
             return (
               <section className={`card meal ${laptop && panelMeal === meal ? 'targeted' : ''}`} key={meal} aria-labelledby={`meal-${meal}`}>
@@ -163,6 +166,30 @@ export function Today() {
                       )
                     })}
                   </ul>
+                )}
+                {toEat.length > 0 && (
+                  <ul className="planned-items">
+                    {toEat.map((p) => (
+                      <li key={p.id}>
+                        <button className="planned-row" onClick={() => eatPlanned(p)} title="Marcar como comido">
+                          <span className="tick" aria-hidden="true" />
+                          <span className="planned-main">
+                            <span className="entry-name">{p.name}</span>
+                            <span className="entry-amount muted">{grams(p.grams)} · planificado</span>
+                          </span>
+                          <span className="entry-kcal muted">{kcal(scale(p.per100, p.grams).kcal)}</span>
+                        </button>
+                        <button className="icon-btn" aria-label={`Quitar ${p.name} del plan`} onClick={() => db.planned.delete(p.id)}>
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {toEat.length > 1 && (
+                  <button className="add-btn secondary eat-all" onClick={() => eatPlannedMeal(toEat)}>
+                    ✓ Comer lo planificado ({toEat.length})
+                  </button>
                 )}
                 <div className="meal-actions">
                   <button className="add-btn" onClick={() => startAdding(meal)}>

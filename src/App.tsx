@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
+import { Plan } from './screens/Plan'
 import { Goals } from './screens/Goals'
 import { Today } from './screens/Today'
 
-const TABS = ['today', 'foods', 'goals'] as const
+const TABS = ['today', 'plan', 'foods', 'goals'] as const
 type Tab = (typeof TABS)[number]
 
 function tabFromHash(): Tab {
@@ -47,6 +48,9 @@ export default function App() {
         <NavLink tab="today" current={tab} icon={<TodayIcon />}>
           Diario
         </NavLink>
+        <NavLink tab="plan" current={tab} icon={<PlanIcon />}>
+          Plan
+        </NavLink>
         <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
           Alimentos
         </NavLink>
@@ -58,6 +62,7 @@ export default function App() {
       <main className="main" ref={mainRef}>
         <div className="main-inner" ref={innerRef} onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('enter-from-left', 'enter-from-right')}>
           {tab === 'today' && <Today />}
+          {tab === 'plan' && <Plan />}
           {tab === 'foods' && <Foods />}
           {tab === 'goals' && <Goals />}
         </div>
@@ -104,6 +109,15 @@ function TodayIcon() {
     <svg {...iconProps}>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 3.5A8.5 8.5 0 0 1 20.5 12H12z" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function PlanIcon() {
+  return (
+    <svg {...iconProps}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+      <path d="M3.5 10h17M8 3v4M16 3v4M8.5 14h3M8.5 17.2h7" />
     </svg>
   )
 }
