@@ -8,5 +8,8 @@
     "directory": "./dist"
   },
   // bocados.org is registered with Cloudflare, so deploying attaches it here.
-  "routes": [{ "pattern": "bocados.org", "custom_domain": true }]
+  "routes": [{ "pattern": "bocados.org", "custom_domain": true }],
+  // Wrangler turns the *.workers.dev address off once routes exist; stated here
+  // so it isn't a surprise. One address also means one copy of each person's data.
+  "workers_dev": false
 }
