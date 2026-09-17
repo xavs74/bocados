@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Food } from '../db'
-import { buildPrompt, extractJson, matchFood, parsePlan } from './planImport'
+import { buildPrompt, extractJson, foodNamesForPrompt, matchFood, parsePlan } from './planImport'
 
 const answer = `Claro, aquí tienes tu plan:
 
@@ -51,6 +51,11 @@ describe('parsePlan', () => {
     expect(parsePlan({ foo: 1 }).issues).toHaveLength(1)
   })
 
+  it("reads the assistant's own estimate when it gives one", () => {
+    const plan = parsePlan({ dias: [{ dia: 'lunes', kcal_estimado: 2410, comidas: { cena: [{ alimento: 'sopa', gramos: 300 }] } }] })
+    expect(plan.days[0].claimedKcal).toBe(2410)
+  })
+
   it('accepts "Día 3" as well as weekday names', () => {
     expect(parsePlan({ dias: [{ dia: 'Día 3', comidas: { cena: [{ alimento: 'sopa', gramos: 300 }] } }] }).days[0].index).toBe(2)
   })
@@ -75,11 +80,37 @@ describe('matchFood', () => {
 })
 
 describe('buildPrompt', () => {
-  it('states the goals and the answer format', () => {
-    const prompt = buildPrompt({ kcal: 2000, split: { carbs: 40, protein: 30, fat: 30 } }, { days: 7, notes: 'sin lactosa' })
-    expect(prompt).toContain('2000 kcal')
-    expect(prompt).toContain('200 g de carbohidratos, 150 g de proteínas, 67 g de grasas')
+  const goals = { kcal: 2400, split: { carbs: 40, protein: 30, fat: 30 } }
+
+  it('states the goals, the allowed range and the answer format', () => {
+    const prompt = buildPrompt(goals, { days: 7, notes: 'sin lactosa' })
+    expect(prompt).toContain('2400 kcal')
+    expect(prompt).toContain('entre 2280 y 2520 kcal')
+    expect(prompt).toContain('240 g de carbohidratos, 180 g de proteínas y 80 g de grasas')
     expect(prompt).toContain('sin lactosa')
     expect(prompt).toContain('"dias"')
+    expect(prompt).toContain('kcal_estimado')
+  })
+
+  it('insists on raw weights, since the food data is raw', () => {
+    const prompt = buildPrompt(goals, { days: 7 })
+    expect(prompt).toContain('crudo')
+    expect(prompt).toContain('250 g de arroz cocido, escribe 80 g de arroz')
+  })
+
+  it('offers the app\'s own food names when given them', () => {
+    const prompt = buildPrompt(goals, { days: 7, foodNames: ['Arroz blanco (crudo)', 'Huevo'] })
+    expect(prompt).toContain('Arroz blanco (crudo), Huevo')
+  })
+})
+
+describe('foodNamesForPrompt', () => {
+  it('puts the most recently used foods first and leaves supermarket products out', () => {
+    const list = [
+      { ...food(1, 'Arroz blanco (crudo)'), category: 'Cereales, pan y pasta' },
+      { ...food(2, 'Yogur natural'), category: 'Lácteos y bebidas vegetales', lastUsed: 5 },
+      { ...food(3, 'Bollería de marca'), category: 'Supermercado', lastUsed: 9 },
+    ]
+    expect(foodNamesForPrompt(list)).toEqual(['Yogur natural', 'Arroz blanco (crudo)'])
   })
 })

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { gramsOf, type Amount, type Food } from '../db'
 import { amountFrom, draftFrom, type AmountDraft } from '../lib/amount'
+import { inputNum } from '../lib/format'
 import { FoodSearch } from './AddEntry'
 import { AmountEditor } from './AmountEditor'
 import { FoodForm } from './FoodForm'
@@ -12,11 +13,16 @@ interface Props {
   confirmLabel: string
   onPick: (food: Food, amount: Amount, grams: number) => void
   onClose: () => void
+  /** Kept in view through every step, so what's being replaced isn't forgotten. */
+  context?: string
+  initialQuery?: string
+  /** Prefills the amount, so an imported quantity isn't lost. */
+  initialGrams?: number
 }
 
 /** Search a food and set an amount. Used to add ingredients to a recipe. */
-export function PickFoodSheet({ title, confirmLabel, onPick, onClose }: Props) {
-  const [query, setQuery] = useState('')
+export function PickFoodSheet({ title, confirmLabel, onPick, onClose, context, initialQuery = '', initialGrams }: Props) {
+  const [query, setQuery] = useState(initialQuery)
   const [food, setFood] = useState<Food | null>(null)
   const [draft, setDraft] = useState<AmountDraft>({ text: '', unit: -1 })
   const [creating, setCreating] = useState<{ name: string; barcode?: string } | null>(null)
@@ -25,8 +31,10 @@ export function PickFoodSheet({ title, confirmLabel, onPick, onClose }: Props) {
 
   function choose(f: Food) {
     setFood(f)
-    setDraft(draftFrom(f.lastAmount, f.servings))
+    setDraft(initialGrams ? { text: inputNum(initialGrams), unit: -1 } : draftFrom(f.lastAmount, f.servings))
   }
+
+  const banner = context ? <p className="pick-context">{context}</p> : null
 
   if (creating) {
     return (
@@ -81,6 +89,7 @@ export function PickFoodSheet({ title, confirmLabel, onPick, onClose }: Props) {
             confirm()
           }}
         >
+          {banner}
           <AmountEditor draft={draft} onChange={setDraft} servings={food.servings} per100={food} autoFocus />
         </form>
       </Sheet>
@@ -89,6 +98,7 @@ export function PickFoodSheet({ title, confirmLabel, onPick, onClose }: Props) {
 
   return (
     <Sheet title={title} onClose={onClose}>
+      {banner}
       <FoodSearch
         query={query}
         onQuery={setQuery}

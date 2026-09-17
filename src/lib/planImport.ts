@@ -1,4 +1,5 @@
 import { MEALS, MEAL_LABEL, type Food, type Meal } from '../db'
+import { SUPERMARKET_CATEGORY } from './categories'
 import { weekdayName } from './dates'
 import { goalGrams, type Goals } from './nutrition'
 
@@ -27,26 +28,56 @@ export const fold = (s: string) =>
  * model not to bother with calories: Bocados works those out from its own food
  * data.
  */
-export function buildPrompt(goals: Goals, options: { days: number; notes?: string }): string {
+export function buildPrompt(goals: Goals, options: { days: number; notes?: string; foodNames?: string[] }): string {
   const g = goalGrams(goals)
   const meals = MEALS.map((m) => MEAL_LABEL[m].toLowerCase()).join(', ')
+  const low = Math.round((goals.kcal * 0.95) / 10) * 10
+  const high = Math.round((goals.kcal * 1.05) / 10) * 10
+  const names = options.foodNames?.length ? options.foodNames.join(', ') : null
   return [
-    `Hazme un plan de comidas de ${options.days} días adaptado a estos objetivos diarios:`,
-    `- ${Math.round(goals.kcal)} kcal`,
-    `- ${Math.round(g.carbs)} g de carbohidratos, ${Math.round(g.protein)} g de proteínas, ${Math.round(g.fat)} g de grasas`,
+    `Hazme un plan de comidas de ${options.days} días para una persona con estos objetivos diarios:`,
+    `- ${Math.round(goals.kcal)} kcal al día. El total de CADA día debe quedar entre ${low} y ${high} kcal.`,
+    `- ${Math.round(g.carbs)} g de carbohidratos, ${Math.round(g.protein)} g de proteínas y ${Math.round(g.fat)} g de grasas al día (aproximado).`,
     options.notes?.trim() ? `- Ten en cuenta: ${options.notes.trim()}` : '',
     '',
-    'Condiciones:',
+    'Reglas importantes sobre las cantidades:',
+    '- Pesos SIEMPRE en crudo y sin cocinar. El arroz, la pasta y las legumbres secas engordan al cocerse: si una comida lleva 250 g de arroz cocido, escribe 80 g de arroz (crudo). Lo mismo con pasta (unos 80 g en crudo por ración) y legumbres.',
+    '- Escribe también el aceite, las salsas y las bebidas con leche, que suman muchas calorías.',
+    '- Pesos de carne y pescado en crudo y sin hueso ni espinas.',
+    '',
+    'Comprobación obligatoria antes de responder:',
+    '- Calcula tú el total de kcal de cada día con tus propios datos nutricionales.',
+    `- Si algún día se sale de ${low}–${high} kcal, corrige las cantidades y vuelve a comprobarlo.`,
+    '- Incluye ese total en el campo "kcal_estimado" de cada día. Yo recalculo todo con mi base de datos, pero me sirve para comparar.',
+    '',
+    'Otras condiciones:',
     `- Comidas de cada día: ${meals}.`,
-    '- Usa alimentos sencillos y comunes en España, con su nombre genérico (por ejemplo "pechuga de pollo", "arroz blanco", "yogur natural"). Evita marcas.',
-    '- Indica la cantidad de cada alimento en gramos, ya preparada para pesar en crudo.',
-    '- No calcules calorías ni macros: yo los calculo con mi propia base de datos.',
+    '- Alimentos sencillos y comunes en España, con nombre genérico. Evita marcas y platos complicados.',
+    names ? `- Usa preferiblemente estos nombres, tal cual, porque son los que reconoce mi aplicación: ${names}.` : '',
+    '- Puedes usar otros alimentos si hacen falta, pero con nombres genéricos y sencillos.',
     '',
     'Responde SOLO con este JSON, sin texto alrededor:',
-    '{"dias":[{"dia":"lunes","comidas":{"desayuno":[{"alimento":"copos de avena","gramos":60}],"comida":[],"merienda":[],"cena":[]}}]}',
+    '{"dias":[{"dia":"lunes","kcal_estimado":0,"comidas":{"desayuno":[{"alimento":"copos de avena","gramos":60}],"comida":[],"merienda":[],"cena":[]}}]}',
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+/**
+ * Food names to offer the assistant: the ones this person uses most first,
+ * then common staples, so the answer comes back in words the app matches.
+ */
+export function foodNamesForPrompt(foods: Food[], limit = 70): string[] {
+  // Brand products are left out: the prompt asks for generic foods.
+  const generic = foods.filter((f) => f.category !== SUPERMARKET_CATEGORY)
+  const used = generic.filter((f) => f.lastUsed).sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0))
+  const rest = generic.filter((f) => !f.lastUsed && f.category)
+  const names: string[] = []
+  for (const food of [...used, ...rest]) {
+    if (names.length >= limit) break
+    if (!names.includes(food.name)) names.push(food.name)
+  }
+  return names
 }
 
 export interface ImportedItem {
@@ -58,6 +89,8 @@ export interface ImportedDay {
   /** 0 = Monday. */
   index: number
   meals: Record<Meal, ImportedItem[]>
+  /** What the assistant thought the day added up to, when it said so. */
+  claimedKcal?: number
 }
 
 export interface ParsedPlan {
@@ -113,6 +146,7 @@ export function parsePlan(value: unknown): ParsedPlan {
       issues.push(`Día ${position + 1}: sin comidas.`)
       return
     }
+    const claimed = num((day as { kcal_estimado?: unknown; kcal?: unknown }).kcal_estimado ?? (day as { kcal?: unknown }).kcal)
     const meals = emptyMeals()
     for (const [key, list] of Object.entries(rawMeals)) {
       const meal = MEAL_NAMES[fold(key)]
@@ -133,7 +167,7 @@ export function parsePlan(value: unknown): ParsedPlan {
         meals[meal].push({ name, grams })
       }
     }
-    days.push({ index, meals })
+    days.push({ index, meals, claimedKcal: claimed ?? undefined })
   })
   return { days, issues }
 }

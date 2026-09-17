@@ -5,10 +5,20 @@ import { useGoals } from '../hooks'
 import { addDays, weekdayName } from '../lib/dates'
 import { grams as gramsText, kcal, parseNum } from '../lib/format'
 import { scale } from '../lib/nutrition'
-import { buildPrompt, extractJson, matchFood, parsePlan } from '../lib/planImport'
+import { buildPrompt, extractJson, foodNamesForPrompt, matchFood, parsePlan } from '../lib/planImport'
 import { clearPlannedWeek, planItems } from '../lib/plan'
 import { PickFoodSheet } from './PickFoodSheet'
 import { Sheet } from './Sheet'
+
+function DayTotal({ kcalTotal, goal, claimed }: { kcalTotal: number; goal: number; claimed?: number }) {
+  const off = goal > 0 && Math.abs(kcalTotal - goal) / goal > 0.15
+  return (
+    <p className={`import-day-total ${off ? 'off' : 'muted'}`}>
+      {kcal(kcalTotal)} kcal · objetivo {kcal(goal)}
+      {claimed ? <span className="muted"> · el plan decía {kcal(claimed)}</span> : null}
+    </p>
+  )
+}
 
 /** One line of the plan once it has been matched against the food list. */
 interface Row {
@@ -33,10 +43,12 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
   const [error, setError] = useState<string | null>(null)
   const [issues, setIssues] = useState<string[]>([])
   const [rows, setRows] = useState<Row[]>([])
+  // What the assistant said each day added up to, to compare with our own numbers.
+  const [claims, setClaims] = useState<Record<number, number | undefined>>({})
   const [replace, setReplace] = useState(true)
   const [picking, setPicking] = useState<string | null>(null)
 
-  const prompt = useMemo(() => buildPrompt(goals, { days: 7, notes }), [goals, notes])
+  const prompt = useMemo(() => buildPrompt(goals, { days: 7, notes, foodNames: foodNamesForPrompt(foods ?? []) }), [goals, notes, foods])
   const kept = rows.filter((r) => r.food && !r.skip)
   const unmatched = rows.filter((r) => !r.food && !r.skip)
 
@@ -59,6 +71,7 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
       return
     }
     const list: Row[] = []
+    setClaims(Object.fromEntries(plan.days.map((d) => [d.index, d.claimedKcal])))
     plan.days.forEach((day) => {
       MEALS.forEach((meal) => {
         day.meals[meal].forEach((item, i) => {
@@ -96,10 +109,14 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
   }
 
   if (picking) {
+    const row = rows.find((r) => r.key === picking)!
     return (
       <PickFoodSheet
-        title={`¿Qué es "${rows.find((r) => r.key === picking)?.text}"?`}
+        title={`¿Qué es "${row.text}"?`}
         confirmLabel="Usar este alimento"
+        context={`Del plan: ${row.text} · ${gramsText(row.grams)} · ${weekdayName(addDays(weekStart, row.dayIndex))}, ${MEAL_LABEL[row.meal].toLowerCase()}`}
+        initialQuery={row.text}
+        initialGrams={row.grams}
         onClose={() => setPicking(null)}
         onPick={(food, _amount, grams) => {
           setRows(rows.map((r) => (r.key === picking ? { ...r, food, grams } : r)))
@@ -235,17 +252,17 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
                   </li>
                 ))}
             </ul>
-            <p className="import-day-total muted">
-              {kcal(
-                rows
-                  .filter((r) => r.dayIndex === dayIndex && r.food && !r.skip)
-                  .reduce((sum, r) => sum + scale(r.food!, r.grams).kcal, 0),
-              )}{' '}
-              kcal · objetivo {kcal(goals.kcal)}
-            </p>
+            <DayTotal
+              kcalTotal={rows.filter((r) => r.dayIndex === dayIndex && r.food && !r.skip).reduce((sum, r) => sum + scale(r.food!, r.grams).kcal, 0)}
+              goal={goals.kcal}
+              claimed={claims[dayIndex]}
+            />
           </section>
         ))}
-        <p className="hint">Los gramos son los del plan: {gramsText(rows.reduce((g, r) => g + (r.skip ? 0 : r.grams), 0))} en total.</p>
+        <p className="hint">
+          Si algún día se pasa mucho, suele ser porque el plan da pesos ya cocinados: el arroz, la pasta y las legumbres pesan el triple cocidos que crudos. Ajusta los gramos
+          aquí o pide el plan otra vez.
+        </p>
       </div>
     </Sheet>
   )

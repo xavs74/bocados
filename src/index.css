@@ -2924,3 +2924,17 @@ kbd {
     text-align: left;
   }
 }
+
+.pick-context {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.import-day-total.off {
+  color: var(--warn);
+  font-weight: 600;
+}
