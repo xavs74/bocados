@@ -301,22 +301,18 @@ function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFo
  * stops, because their search allows only a few requests a minute.
  */
 function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) => void }) {
-  const [state, setState] = useState<{ status: 'idle' | 'loading' | 'done' | 'error'; items: Product[] }>({ status: 'idle', items: [] })
+  // Holds the answer for one query; anything else on screen means it's still loading.
+  const [answer, setAnswer] = useState<{ query: string; items: Product[]; failed: boolean } | null>(null)
   const q = query.trim()
 
   useEffect(() => {
-    if (q.length < MIN_QUERY) {
-      setState({ status: 'idle', items: [] })
-      return
-    }
+    if (q.length < MIN_QUERY) return
     const controller = new AbortController()
-    setState((s) => ({ ...s, status: 'loading' }))
     const timer = setTimeout(async () => {
       try {
-        const items = await searchProducts(q, controller.signal)
-        setState({ status: 'done', items })
+        setAnswer({ query: q, items: await searchProducts(q, controller.signal), failed: false })
       } catch (e) {
-        if ((e as Error).name !== 'AbortError') setState({ status: 'error', items: [] })
+        if ((e as Error).name !== 'AbortError') setAnswer({ query: q, items: [], failed: true })
       }
     }, 600)
     return () => {
@@ -325,21 +321,23 @@ function ProductResults({ query, onPick }: { query: string; onPick: (f: Food) =>
     }
   }, [q])
 
-  if (state.status === 'idle') return null
+  if (q.length < MIN_QUERY) return null
+  const ready = answer?.query === q ? answer : null
 
   return (
     <section className="products">
       <h3 className="group-title">
         Supermercados <span className="muted">· Open Food Facts</span>
       </h3>
-      {state.status === 'loading' && <p className="empty">Buscando productos…</p>}
-      {state.status === 'error' && <p className="empty">No se pudo buscar. Inténtalo otra vez.</p>}
-      {state.status === 'done' &&
-        (state.items.length === 0 ? (
+      {!ready && <p className="empty">Buscando productos…</p>}
+      {ready?.failed && <p className="empty">No se pudo buscar. Inténtalo otra vez.</p>}
+      {ready &&
+        !ready.failed &&
+        (ready.items.length === 0 ? (
           <p className="empty">Ningún producto coincide con «{q}».</p>
         ) : (
           <ul className="food-list">
-            {state.items.map((p) => (
+            {ready.items.map((p) => (
               <li key={`${p.code}-${p.name}`}>
                 <button className="food-row" onClick={async () => onPick(await saveProduct(p))}>
                   <span className="food-name">{productLabel(p)}</span>
