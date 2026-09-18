@@ -2560,15 +2560,20 @@ kbd {
   text-underline-offset: 3px;
 }
 
+/* Phones: Importar plan gets the full width, the rest share the row below,
+   so "Lista de la compra" never runs out of room. */
 .plan-actions {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   margin-bottom: 14px;
 }
 
+.plan-actions .btn.primary {
+  grid-column: 1 / -1;
+}
+
 .plan-actions .btn {
-  flex: 1;
   min-width: 0;
   white-space: nowrap;
 }
@@ -2806,8 +2811,9 @@ kbd {
 }
 
 @media (min-width: 720px) {
-  .plan-actions .btn {
-    flex: none;
+  .plan-actions {
+    display: flex;
+    align-items: center;
   }
 
   .plan-actions .more-btn {
