@@ -32,6 +32,8 @@ export interface Goals {
   /** 'calculated' derives kcal from the profile; missing means the kcal were typed in. */
   mode?: 'manual' | 'calculated'
   profile?: Partial<Profile>
+  /** True once the person has chosen their goal (not the starting default). */
+  set?: boolean
 }
 
 export const ZERO: Nutrients = { kcal: 0, carbs: 0, protein: 0, fat: 0 }
