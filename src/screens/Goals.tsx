@@ -1,4 +1,6 @@
 import { goalsAreSet } from '../lib/goals'
+import { goalGrams } from '../lib/nutrition'
+import { MAX_PER_KG, MIN_PER_KG, defaultProteinPerKg, referenceWeight, splitFromProtein } from '../lib/protein'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import { SplitEditor } from '../components/SplitEditor'
@@ -16,7 +18,7 @@ import {
   tdee,
   type Profile,
 } from '../lib/energy'
-import { LOCALE, inputNum, kcal, parseNum } from '../lib/format'
+import { LOCALE, inputNum, kcal, num, parseNum } from '../lib/format'
 import { MACROS, MACRO_SHORT, type Goals as GoalsT } from '../lib/nutrition'
 import { PRESETS } from '../lib/split'
 import { askConfirm } from '../lib/confirm'
@@ -86,12 +88,29 @@ export function Goals() {
 function GoalsForm({ initial }: { initial: GoalsT }) {
   const [goals, setGoals] = useState<GoalsT>(initial)
   const [kcalText, setKcalText] = useState(String(initial.kcal))
+  // Decided once, when the screen opens: the first autosave marks the goals as set.
+  const [isNew] = useState(() => !goalsAreSet(initial))
   // New people start on the calculator; older manual goals had no mode.
-  const mode = goals.mode ?? (goalsAreSet(initial) ? 'manual' : 'calculated')
+  const mode = goals.mode ?? (isNew ? 'calculated' : 'manual')
 
   function update(next: GoalsT) {
+    // Store the mode explicitly: working it out from "has a goal been set" flips it the moment the first change is saved.
+    next = { ...next, mode: next.mode ?? mode }
+    const calculated = next.mode === 'calculated' && isComplete(next.profile)
     // In calculated mode the target follows the profile whenever it's complete.
-    if (next.mode === 'calculated' && isComplete(next.profile)) next = { ...next, kcal: targetKcal(next.profile) }
+    if (calculated) next = { ...next, kcal: targetKcal(next.profile as Profile) }
+    // New people get protein by weight as soon as their data is complete.
+    if (calculated && next.proteinPerKg === undefined && isNew)
+      next = { ...next, proteinPerKg: defaultProteinPerKg((next.profile as Profile).adjustment) }
+    // Changing the goal (lose, keep, gain) moves g/kg to its default, unless the person picked their own value.
+    const prevAdj = goals.profile?.adjustment
+    const nextAdj = next.profile?.adjustment
+    if (next.proteinPerKg && !next.proteinCustom && prevAdj !== undefined && nextAdj !== undefined && prevAdj !== nextAdj)
+      next = { ...next, proteinPerKg: defaultProteinPerKg(nextAdj) }
+    // Protein by weight needs a weight: without the calculator it falls back to percentages.
+    if (next.proteinPerKg && !calculated) next = { ...next, proteinPerKg: undefined }
+    if (next.proteinPerKg && calculated)
+      next = { ...next, split: splitFromProtein(next.kcal, referenceWeight(next.profile as Profile).kg, next.proteinPerKg).split }
     setGoals(next)
     if (next.kcal > 0) saveGoals(next)
   }
@@ -145,6 +164,10 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
       <section className="card pad">
         <h2 className="section-title">Reparto de macros</h2>
         <p className="hint">Qué parte de tus calorías viene de cada macro. Carbohidratos y proteínas tienen 4 kcal por gramo; las grasas, 9.</p>
+        {mode === 'calculated' && isComplete(goals.profile) && (
+          <ProteinByWeight goals={goals} profile={goals.profile} onChange={(perKg, custom) => update({ ...goals, proteinPerKg: perKg, proteinCustom: custom })} />
+        )}
+        {!goals.proteinPerKg && (
         <div className="presets">
           {PRESETS.map((p) => {
             const active = MACROS.every((m) => p.split[m] === goals.split[m])
@@ -162,8 +185,54 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
             )
           })}
         </div>
-        <SplitEditor split={goals.split} kcal={goals.kcal} onChange={(split) => update({ ...goals, split })} />
+        )}
+        {/* Moving the split by hand means choosing percentages, so protein stops following weight. */}
+        <SplitEditor split={goals.split} kcal={goals.kcal} onChange={(split) => update({ ...goals, split, proteinPerKg: 0 })} />
       </section>
+    </div>
+  )
+}
+
+/** Protein in grams per kilo of body weight, with fat around 30 % and carbs taking the rest. */
+function ProteinByWeight({ goals, profile, onChange }: { goals: GoalsT; profile: Profile; onChange: (perKg: number, custom: boolean) => void }) {
+  const on = !!goals.proteinPerKg
+  const perKg = goals.proteinPerKg || defaultProteinPerKg(profile.adjustment)
+  const ref = referenceWeight(profile)
+  // Same figure as the protein row below, which comes from the rounded split.
+  const grams = Math.round(goalGrams(goals).protein)
+  const step = (delta: number) => onChange(Math.round(Math.min(MAX_PER_KG, Math.max(MIN_PER_KG, perKg + delta)) * 10) / 10, true)
+  return (
+    <div className={`protein-kg ${on ? 'on' : ''}`}>
+      <label className="check-row">
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked ? defaultProteinPerKg(profile.adjustment) : 0, false)} />
+        <span>
+          <strong>Proteína según tu peso</strong> (recomendado)
+        </span>
+      </label>
+      {on && (
+        <>
+          <div className="protein-kg-row">
+            <div className="stepper">
+              <button type="button" className="step-btn" aria-label="Menos proteína" onClick={() => step(-0.1)}>
+                −
+              </button>
+              <span className="protein-kg-value">{num(perKg)} g/kg</span>
+              <button type="button" className="step-btn" aria-label="Más proteína" onClick={() => step(0.1)}>
+                +
+              </button>
+            </div>
+            <span className="protein-kg-grams">
+              <strong>{grams} g</strong> de proteína al día
+            </span>
+          </div>
+          <p className="hint">
+            {profile.adjustment < 0 ? 'Para perder peso se suelen recomendar 1,6–2,2 g por kg: ayuda a conservar músculo. ' : 'Entre 1,6 y 2 g por kg es lo habitual si entrenas. '}
+            Las grasas se quedan en torno al 30 % y los carbohidratos completan el resto.
+            {ref.adjusted && ` Con tu peso se calcula sobre ${ref.kg} kg (el peso con un IMC de 25), porque sobre el peso real saldría una cantidad poco realista.`}
+          </p>
+          <p className="hint">Si tienes problemas de riñón, consulta con un profesional antes de seguir una dieta alta en proteína.</p>
+        </>
+      )}
     </div>
   )
 }

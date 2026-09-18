@@ -34,6 +34,10 @@ export interface Goals {
   profile?: Partial<Profile>
   /** True once the person has chosen their goal (not the starting default). */
   set?: boolean
+  /** When set, protein follows body weight (g/kg) and the split is derived from it. */
+  proteinPerKg?: number
+  /** The person set g/kg themselves, so changing the goal leaves it alone. */
+  proteinCustom?: boolean
 }
 
 export const ZERO: Nutrients = { kcal: 0, carbs: 0, protein: 0, fat: 0 }

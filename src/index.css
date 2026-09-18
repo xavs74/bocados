@@ -3343,3 +3343,38 @@ kbd {
 .no-goal-banner .btn {
   text-decoration: none;
 }
+
+.protein-kg {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.protein-kg.on {
+  border-color: color-mix(in srgb, var(--protein) 60%, var(--border));
+}
+
+.protein-kg-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.protein-kg-value {
+  min-width: 72px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.protein-kg-grams {
+  font-variant-numeric: tabular-nums;
+}
+
+.protein-kg .hint {
+  margin: 0;
+}
