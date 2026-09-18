@@ -2663,10 +2663,13 @@ kbd {
 
 .plan-day {
   display: grid;
+  /* A fixed column: Safari otherwise sizes it to the longest food name. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
 .day-summary {
+  min-width: 0;
   padding: 16px 18px;
 }
 
@@ -2735,10 +2738,12 @@ kbd {
 
 .plan-meals {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
 .plan-meal-card {
+  min-width: 0;
   padding: 4px 0 2px;
 }
 
