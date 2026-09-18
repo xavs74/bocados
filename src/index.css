@@ -284,6 +284,12 @@ a {
   transition: filter 0.15s, background 0.15s;
 }
 
+/* Safari shrinks icons inside a button that's short of space; keep them whole. */
+.btn svg,
+.icon-btn svg {
+  flex: none;
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: default;

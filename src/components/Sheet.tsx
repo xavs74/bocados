@@ -1,4 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { settleViewport } from '../lib/viewport'
 
 interface Props {
   title: string
@@ -7,7 +9,13 @@ interface Props {
   footer?: ReactNode
 }
 
-/** Bottom sheet on phones, centered dialog on wider screens. */
+/**
+ * Bottom sheet on phones, centered dialog on wider screens.
+ *
+ * Rendered straight into <body>: inside the app's scrolling area, iOS Safari
+ * clips fixed elements to that area, which cut the bottom of sheets off
+ * behind the tab bar with no way to scroll to it.
+ */
 export function Sheet({ title, onClose, children, footer }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -19,7 +27,10 @@ export function Sheet({ title, onClose, children, footer }: Props) {
     }
   }, [onClose])
 
-  return (
+  // Closing a sheet while the keyboard is up can leave iOS scrolled; put the app back.
+  useEffect(() => settleViewport, [])
+
+  return createPortal(
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
         <header className="sheet-header">
@@ -31,7 +42,8 @@ export function Sheet({ title, onClose, children, footer }: Props) {
         <div className="sheet-body">{children}</div>
         {footer && <footer className="sheet-footer">{footer}</footer>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
