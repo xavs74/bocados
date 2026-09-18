@@ -29,15 +29,21 @@ export interface Food extends Nutrients {
   lastAmount?: Amount
 }
 
-export const MEALS = ['breakfast', 'lunch', 'snack', 'dinner'] as const
+/** Every meal Bocados knows, in the order of the day. Each person switches on the ones they use. */
+export const MEALS = ['breakfast', 'midmorning', 'lunch', 'snack', 'dinner', 'latenight'] as const
 export type Meal = (typeof MEALS)[number]
 
 export const MEAL_LABEL: Record<Meal, string> = {
   breakfast: 'Desayuno',
+  midmorning: 'Media mañana',
   lunch: 'Comida',
   snack: 'Merienda',
   dinner: 'Cena',
+  latenight: 'Recena',
 }
+
+/** Meals switched on until someone changes them. */
+export const DEFAULT_MEALS: Meal[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
 /**
  * A logged food. Keeps a copy of the food's name and values so editing or

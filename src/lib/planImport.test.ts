@@ -142,6 +142,19 @@ describe('buildPrompt', () => {
     expect(prompt).toContain('250 g de arroz cocido, escribe 80 g de arroz')
   })
 
+  it('asks only for the meals the person uses', () => {
+    const prompt = buildPrompt(goals, { days: 7, meals: ['breakfast', 'lunch', 'dinner'] })
+    expect(prompt).toContain('Comidas de cada día: desayuno, comida, cena.')
+    expect(prompt).not.toContain('merienda')
+    expect(prompt).toContain('"cena":[]')
+  })
+
+  it('reads meal names beyond the usual four', () => {
+    const plan = parsePlan({ dias: [{ dia: 'lunes', comidas: { 'media mañana': [{ alimento: 'fruta', gramos: 150 }], recena: [{ alimento: 'yogur', gramos: 125 }] } }] })
+    expect(plan.days[0].meals.midmorning[0].name).toBe('fruta')
+    expect(plan.days[0].meals.latenight[0].name).toBe('yogur')
+  })
+
   it('lists the person\'s recipes so the assistant can use them whole', () => {
     const prompt = buildPrompt(goals, { days: 7, recipes: [{ name: 'Arroz con pollo', servingGrams: 250 }] })
     expect(prompt).toContain('Arroz con pollo (1 ración = 250 g)')

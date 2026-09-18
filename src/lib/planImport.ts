@@ -8,11 +8,15 @@ const DAY_NAMES = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'
 
 const MEAL_NAMES: Record<string, Meal> = {
   desayuno: 'breakfast',
+  'media manana': 'midmorning',
+  'media_manana': 'midmorning',
+  tentempie: 'midmorning',
   almuerzo: 'lunch',
   comida: 'lunch',
   merienda: 'snack',
   snack: 'snack',
   cena: 'dinner',
+  recena: 'latenight',
 }
 
 export const fold = (s: string) =>
@@ -28,9 +32,15 @@ export const fold = (s: string) =>
  * model not to bother with calories: Bocados works those out from its own food
  * data.
  */
-export function buildPrompt(goals: Goals, options: { days: number; notes?: string; foodNames?: string[]; recipes?: { name: string; servingGrams: number }[] }): string {
+export function buildPrompt(
+  goals: Goals,
+  options: { days: number; notes?: string; foodNames?: string[]; recipes?: { name: string; servingGrams: number }[]; meals?: Meal[] },
+): string {
   const g = goalGrams(goals)
-  const meals = MEALS.map((m) => MEAL_LABEL[m].toLowerCase()).join(', ')
+  const mealList = options.meals?.length ? options.meals : (['breakfast', 'lunch', 'snack', 'dinner'] as Meal[])
+  const keys = mealList.map((m) => MEAL_LABEL[m].toLowerCase())
+  const meals = keys.join(', ')
+  const example = `{"dias":[{"dia":"lunes","kcal_estimado":0,"comidas":{${keys.map((k, i) => `"${k}":${i === 0 ? '[{"alimento":"copos de avena","gramos":60}]' : '[]'}`).join(',')}}}]}`
   const low = Math.round((goals.kcal * 0.95) / 10) * 10
   const high = Math.round((goals.kcal * 1.05) / 10) * 10
   const names = options.foodNames?.length ? options.foodNames.join(', ') : null
@@ -51,7 +61,7 @@ export function buildPrompt(goals: Goals, options: { days: number; notes?: strin
     '- Incluye ese total en el campo "kcal_estimado" de cada día. Yo recalculo todo con mi base de datos, pero me sirve para comparar.',
     '',
     'Otras condiciones:',
-    `- Comidas de cada día: ${meals}.`,
+    `- Comidas de cada día: ${meals}. Solo esas, sin añadir otras.`,
     '- Alimentos sencillos y comunes en España, con nombre genérico. Evita marcas y platos complicados.',
     names ? `- Usa preferiblemente estos nombres, tal cual, porque son los que reconoce mi aplicación: ${names}.` : '',
     '- Puedes usar otros alimentos si hacen falta, pero con nombres genéricos y sencillos.',
@@ -60,7 +70,7 @@ export function buildPrompt(goals: Goals, options: { days: number; notes?: strin
       : '',
     '',
     'Responde SOLO con este JSON, sin texto alrededor:',
-    '{"dias":[{"dia":"lunes","kcal_estimado":0,"comidas":{"desayuno":[{"alimento":"copos de avena","gramos":60}],"comida":[],"merienda":[],"cena":[]}}]}',
+    example,
   ]
     .filter(Boolean)
     .join('\n')
@@ -176,7 +186,7 @@ export function parsePlan(value: unknown): ParsedPlan {
 }
 
 function emptyMeals(): Record<Meal, ImportedItem[]> {
-  return { breakfast: [], lunch: [], snack: [], dinner: [] }
+  return Object.fromEntries(MEALS.map((m) => [m, []])) as unknown as Record<Meal, ImportedItem[]>
 }
 
 function dayIndex(value: unknown, position: number): number {

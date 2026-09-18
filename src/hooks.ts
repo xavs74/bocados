@@ -1,6 +1,7 @@
 import { goalsAreSet } from './lib/goals'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { DEFAULT_GOALS, db } from './db'
+import { DEFAULT_GOALS, db, type Meal } from './db'
+import { normalizeMeals } from './lib/meals'
 import type { Goals } from './lib/nutrition'
 
 export function useGoals(): Goals {
@@ -18,4 +19,14 @@ export function useGoalsState(): { goals: Goals; set: boolean; loaded: boolean }
 /** Saving goals from the app always means the person chose them. */
 export async function saveGoals(goals: Goals) {
   await db.settings.put({ key: 'goals', value: { ...goals, set: true } })
+}
+
+/** The meals this person uses, in the order of the day. */
+export function useMeals(): Meal[] {
+  const row = useLiveQuery(() => db.settings.get('meals'))
+  return normalizeMeals(row?.value)
+}
+
+export async function saveMeals(meals: Meal[]) {
+  await db.settings.put({ key: 'meals', value: normalizeMeals(meals) })
 }
