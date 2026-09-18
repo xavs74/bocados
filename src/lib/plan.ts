@@ -1,4 +1,4 @@
-import { MEALS, db, type Entry, type Meal, type Planned } from '../db'
+import { MEALS, db, type Entry, type Meal, type Planned, type Recipe } from '../db'
 import { categoryOf } from './categories'
 import { addDays, weekDays } from './dates'
 import { itemsFromEntries, type PastMeal } from './mealSets'
@@ -124,6 +124,22 @@ export function shoppingList(planned: Planned[], categoryFor: (foodId: number) =
       return only && only !== 'g' ? { ...line, servings: { label: only, count: Math.round(count * 10) / 10 } } : line
     })
     .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+}
+
+/**
+ * Replaces planned recipes with their ingredients, scaled to the amount
+ * planned: you buy rice and chicken, not "arroz con pollo". Recipes inside
+ * recipes are opened too.
+ */
+export function expandRecipes(planned: Planned[], recipeFor: (foodId: number) => Recipe | undefined, depth = 0): Planned[] {
+  return planned.flatMap((p) => {
+    const recipe = depth < 3 ? recipeFor(p.foodId) : undefined
+    const total = recipe ? recipe.ingredients.reduce((g, i) => g + i.grams, 0) : 0
+    if (!recipe || total <= 0) return [p]
+    const factor = p.grams / total
+    const parts = recipe.ingredients.map((i) => ({ ...p, foodId: i.foodId, name: i.name, per100: i.per100, grams: i.grams * factor, amount: { quantity: i.grams * factor } }))
+    return expandRecipes(parts, recipeFor, depth + 1)
+  })
 }
 
 /** Looks up each planned food's category from the food list. */

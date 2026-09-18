@@ -2023,7 +2023,7 @@ kbd {
 
   .macro-cols {
     display: grid;
-    grid-template-columns: repeat(4, 58px);
+    grid-template-columns: repeat(4, 54px);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
@@ -2853,6 +2853,7 @@ kbd {
 .planned-row {
   display: flex;
   flex: 1;
+  min-width: 0;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -3184,4 +3185,97 @@ kbd {
 .meal-planned {
   color: var(--muted);
   font-weight: 500;
+}
+
+/* Planned food in Diario: same columns as eaten food, greyed. */
+.planned-row .entry-side,
+.planned-row .macro-cols,
+.planned-total .entry-side,
+.planned-total .macro-cols {
+  color: var(--muted);
+}
+
+.planned-row .entry-macros {
+  font-size: 0.82rem;
+}
+
+/* The name keeps at least half the row; the macros wrap instead of squeezing it. */
+.planned-main {
+  flex: 1 1 50%;
+}
+
+.planned-row .entry-side {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.planned-row .entry-macros,
+.planned-total .entry-macros {
+  white-space: normal;
+  text-align: right;
+}
+
+.planned-items li.planned-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 18px;
+  padding: 8px 0 4px;
+  border-top: 1px dashed var(--border);
+}
+
+.planned-total-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.planned-total .entry-kcal {
+  font-weight: 700;
+}
+
+@media (min-width: 1200px) {
+  .planned-items li.planned-total {
+    margin-right: 58px;
+    padding-right: 0;
+  }
+}
+
+.planned-row .entry-name {
+  white-space: normal;
+}
+
+@media (min-width: 1200px) {
+  /* Every row keeps a 40 px slot on the right for the planned rows' × button,
+     so eaten, planned and total columns all line up under the headers. */
+  .meal-header,
+  .entry-head,
+  .entry {
+    padding-right: 58px;
+  }
+
+  .planned-items li {
+    padding-right: 18px;
+  }
+
+  .planned-row {
+    min-width: 0;
+    padding-right: 0;
+  }
+
+  .planned-row .entry-name {
+    white-space: nowrap;
+  }
+}
+
+/* Long planned names must shrink ("…") instead of widening the meal card past its column. */
+.meals {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.planned-main {
+  overflow: hidden;
 }

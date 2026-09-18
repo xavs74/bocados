@@ -12,7 +12,7 @@ import { useGoals } from '../hooks'
 import { addDays, dayLabel, fullDate, isoDate } from '../lib/dates'
 import { grams, kcal, num } from '../lib/format'
 import { mealForNow } from '../lib/meals'
-import { scale, sum } from '../lib/nutrition'
+import { scale, sum, type Nutrients } from '../lib/nutrition'
 import { eatPlanned, eatPlannedMeal, plannedBetween, plannedTotals } from '../lib/plan'
 import { useIsLaptop } from '../lib/useMediaQuery'
 
@@ -181,15 +181,19 @@ export function Today() {
                           <span className="tick" aria-hidden="true" />
                           <span className="planned-main">
                             <span className="entry-name">{p.name}</span>
-                            <span className="entry-amount muted">{grams(p.grams)} · planificado</span>
+                            <span className="entry-amount muted">{grams(p.grams)}</span>
                           </span>
-                          <span className="entry-kcal muted">{kcal(scale(p.per100, p.grams).kcal)}</span>
+                          <PlannedValues n={scale(p.per100, p.grams)} laptop={laptop} />
                         </button>
                         <button className="icon-btn" aria-label={`Quitar ${p.name} del plan`} onClick={() => db.planned.delete(p.id)}>
                           ×
                         </button>
                       </li>
                     ))}
+                    <li className="planned-total">
+                      <span className="planned-total-label">Previsto</span>
+                      <PlannedValues n={plannedTotals(toEat)} laptop={laptop} strong />
+                    </li>
                   </ul>
                 )}
                 {toEat.length > 1 && (
@@ -257,6 +261,19 @@ export function Today() {
   )
 }
 
+
+/** Values of planned food: the same columns or line as eaten food, in grey. */
+function PlannedValues({ n, laptop, strong }: { n: Nutrients; laptop: boolean; strong?: boolean }) {
+  if (laptop) return <MacroCols n={n} strong={strong} />
+  return (
+    <span className="entry-side">
+      <span className="entry-kcal">{kcal(n.kcal)}</span>
+      <span className="entry-macros">
+        Carb {num(n.carbs)} · Prot {num(n.protein)} · Grasa {num(n.fat)}
+      </span>
+    </span>
+  )
+}
 
 function RepeatIcon() {
   return (

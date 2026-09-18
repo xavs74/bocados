@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { db } from '../db'
 import { addDays, weekLabel } from '../lib/dates'
 import { grams, num } from '../lib/format'
-import { categoryLookup, plannedBetween, shoppingList, type ShoppingLine } from '../lib/plan'
+import { categoryLookup, expandRecipes, plannedBetween, shoppingList, type ShoppingLine } from '../lib/plan'
 import { Sheet } from './Sheet'
 
 /** Grams read better as kilos once they pass a kilo. */
@@ -17,8 +17,10 @@ export function ShoppingSheet({ weekStart, onClose }: { weekStart: string; onClo
   const [copied, setCopied] = useState(false)
   const planned = useLiveQuery(() => plannedBetween(weekStart, addDays(weekStart, 6)), [weekStart])
   const foods = useLiveQuery(() => db.foods.toArray(), [])
+  const recipes = useLiveQuery(() => db.recipes.toArray(), [])
 
-  const lines = planned && foods ? shoppingList(planned, categoryLookup(foods)) : []
+  const byFood = new Map((recipes ?? []).filter((r) => r.foodId).map((r) => [r.foodId!, r]))
+  const lines = planned && foods && recipes ? shoppingList(expandRecipes(planned, (id) => byFood.get(id)), categoryLookup(foods)) : []
   const groups = lines.reduce<Record<string, ShoppingLine[]>>((acc, line) => {
     ;(acc[line.category] ??= []).push(line)
     return acc
