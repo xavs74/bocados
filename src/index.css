@@ -1710,7 +1710,8 @@ input[type='range'] {
   background: var(--danger);
 }
 
-.cal-day.selected .cal-mark {
+/* Outline a real marker on the selected day; an empty day stays empty, so it isn't mistaken for a plan. */
+.cal-day.selected:not(.status-empty) .cal-mark {
   box-shadow: 0 0 0 1.5px var(--brand-ink);
 }
 
@@ -2937,4 +2938,35 @@ kbd {
 .import-day-total.off {
   color: var(--warn);
   font-weight: 600;
+}
+
+.import-list .duplicate .import-name {
+  color: var(--warn);
+}
+
+.import-dup {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.recipe-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 0 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  font-size: 0.85rem;
+}
+
+/* A plan waiting to be eaten: an empty ring instead of a dot. */
+.status-planned .cal-mark {
+  box-shadow: inset 0 0 0 1.5px var(--brand);
+}
+
+.cal-day.selected.status-planned .cal-mark {
+  box-shadow: inset 0 0 0 1.5px var(--brand-ink);
 }

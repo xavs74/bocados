@@ -3,9 +3,10 @@ import { useMemo, useState } from 'react'
 import { MEALS, MEAL_LABEL, db, type Food, type Meal } from '../db'
 import { useGoals } from '../hooks'
 import { addDays, weekdayName } from '../lib/dates'
-import { grams as gramsText, kcal, parseNum } from '../lib/format'
+import { grams as gramsText, kcal, num, parseNum } from '../lib/format'
 import { scale } from '../lib/nutrition'
-import { buildPrompt, extractJson, foodNamesForPrompt, matchFood, parsePlan } from '../lib/planImport'
+import { buildPrompt, extractJson, findRecipes, foodNamesForPrompt, matchFood, parsePlan, type RecipeHit } from '../lib/planImport'
+import { servingGrams } from '../lib/recipes'
 import { clearPlannedWeek, planItems } from '../lib/plan'
 import { PickFoodSheet } from './PickFoodSheet'
 import { Sheet } from './Sheet'
@@ -36,6 +37,7 @@ type Step = 'prompt' | 'paste' | 'review'
 export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onClose: () => void }) {
   const goals = useGoals()
   const foods = useLiveQuery(() => db.foods.toArray(), [])
+  const recipes = useLiveQuery(() => db.recipes.toArray(), [])
   const [step, setStep] = useState<Step>('prompt')
   const [notes, setNotes] = useState('')
   const [copied, setCopied] = useState(false)
@@ -48,7 +50,16 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
   const [replace, setReplace] = useState(true)
   const [picking, setPicking] = useState<string | null>(null)
 
-  const prompt = useMemo(() => buildPrompt(goals, { days: 7, notes, foodNames: foodNamesForPrompt(foods ?? []) }), [goals, notes, foods])
+  const prompt = useMemo(
+    () =>
+      buildPrompt(goals, {
+        days: 7,
+        notes,
+        foodNames: foodNamesForPrompt(foods ?? []),
+        recipes: (recipes ?? []).map((r) => ({ name: r.name, servingGrams: servingGrams(r.ingredients, r.servings) })),
+      }),
+    [goals, notes, foods, recipes],
+  )
   const kept = rows.filter((r) => r.food && !r.skip)
   const unmatched = rows.filter((r) => !r.food && !r.skip)
 
@@ -106,6 +117,34 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
       }
     }
     onClose()
+  }
+
+  /** Rows in the same meal that ended up as the same food, usually a matching mistake. */
+  const duplicates = useMemo(() => {
+    const seen = new Map<string, number>()
+    for (const r of rows) if (r.food && !r.skip) seen.set(`${r.dayIndex}-${r.meal}-${r.food.id}`, (seen.get(`${r.dayIndex}-${r.meal}-${r.food.id}`) ?? 0) + 1)
+    return new Set(rows.filter((r) => r.food && !r.skip && (seen.get(`${r.dayIndex}-${r.meal}-${r.food.id}`) ?? 0) > 1).map((r) => r.key))
+  }, [rows])
+
+  /** Meals whose foods add up to one of this person's recipes. */
+  function recipeHits(dayIndex: number): { meal: Meal; hit: RecipeHit }[] {
+    return MEALS.flatMap((meal) =>
+      findRecipes(
+        rows.filter((r) => r.dayIndex === dayIndex && r.meal === meal && !r.skip).map((r) => ({ key: r.key, foodId: r.food?.id, grams: r.grams })),
+        recipes ?? [],
+      ).map((hit) => ({ meal, hit })),
+    )
+  }
+
+  /** Swaps the ingredient rows for the recipe itself, keeping their weight. */
+  function swapInRecipe(dayIndex: number, meal: Meal, hit: RecipeHit) {
+    const food = foods?.find((f) => f.id === hit.recipe.foodId)
+    if (!food) return
+    const first = rows.findIndex((r) => hit.keys.includes(r.key))
+    const merged: Row = { key: `${dayIndex}-${meal}-receta-${hit.recipe.id}`, dayIndex, meal, text: hit.recipe.name, grams: Math.round(hit.grams), food, skip: false }
+    const rest = rows.filter((r) => !hit.keys.includes(r.key))
+    rest.splice(Math.min(first, rest.length), 0, merged)
+    setRows(rest)
   }
 
   if (picking) {
@@ -220,15 +259,27 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
         {[...new Set(rows.map((r) => r.dayIndex))].sort().map((dayIndex) => (
           <section key={dayIndex}>
             <h3 className="group-title">{weekdayName(addDays(weekStart, dayIndex))}</h3>
+            {recipeHits(dayIndex).map(({ meal, hit }) => (
+              <div className="recipe-hint" key={`${meal}-${hit.recipe.id}`}>
+                <span>
+                  {MEAL_LABEL[meal]}: parece tu receta <strong>{hit.recipe.name}</strong> (≈ {num(hit.grams / Math.max(servingGrams(hit.recipe.ingredients, hit.recipe.servings), 1))}{' '}
+                  raciones)
+                </span>
+                <button className="btn ghost small" onClick={() => swapInRecipe(dayIndex, meal, hit)}>
+                  Usar la receta
+                </button>
+              </div>
+            ))}
             <ul className="import-list">
               {rows
                 .filter((r) => r.dayIndex === dayIndex)
                 .map((row) => (
-                  <li key={row.key} className={row.skip ? 'skipped' : row.food ? '' : 'unmatched'}>
+                  <li key={row.key} className={row.skip ? 'skipped' : !row.food ? 'unmatched' : duplicates.has(row.key) ? 'duplicate' : ''}>
                     <div className="import-main">
                       <span className="import-meal muted">{MEAL_LABEL[row.meal]}</span>
                       <span className="import-name">{row.food ? row.food.name : row.text}</span>
                       {row.food && row.food.name.toLowerCase() !== row.text.toLowerCase() && <span className="import-from muted">del plan: {row.text}</span>}
+                      {duplicates.has(row.key) && <span className="import-dup">Repetido en esta comida: revisa si es el alimento correcto</span>}
                     </div>
                     <div className="import-amount">
                       <input

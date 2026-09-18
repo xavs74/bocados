@@ -11,10 +11,11 @@ import { Sheet } from './Sheet'
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
-const STATUS_LABEL: Record<Exclude<DayStatus, 'empty'>, string> = {
+const STATUS_LABEL: Record<Exclude<DayStatus, 'empty'> | 'planned', string> = {
   good: 'Cerca del objetivo',
   low: 'Por debajo',
   high: 'Por encima',
+  planned: 'Planificado',
 }
 
 interface Props {
@@ -61,6 +62,16 @@ export function CalendarMonth({ date, onPick }: { date: string; onPick: (date: s
     return map
   }, [first, last])
 
+  // Days with foods planned but not yet eaten get an empty ring.
+  const plannedDays = useLiveQuery(async () => {
+    const days = new Set<string>()
+    await db.planned
+      .where('date')
+      .between(first, last, true, true)
+      .each((p) => days.add(p.date))
+    return days
+  }, [first, last])
+
   const logged = totals ? [...totals.values()] : []
   const average = logged.length ? logged.reduce((a, b) => a + b, 0) / logged.length : 0
   const onTarget = logged.filter((k) => dayStatus(k, goals.kcal) === 'good').length
@@ -100,14 +111,15 @@ export function CalendarMonth({ date, onPick }: { date: string; onPick: (date: s
               {week.map((day, j) => {
                 if (!day) return <td key={j} />
                 const k = totals?.get(day)
-                const status = dayStatus(k, goals.kcal)
+                const planned = !k && !!plannedDays?.has(day)
+                const status = planned ? 'planned' : dayStatus(k, goals.kcal)
                 const label = parseIso(day).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })
                 return (
                   <td key={j}>
                     <button
                       className={`cal-day status-${status} ${day === date ? 'selected' : ''} ${day === today ? 'today' : ''}`}
                       onClick={() => onPick(day)}
-                      aria-label={`${label}${k ? `, ${kcal(k)} kcal, ${STATUS_LABEL[status as keyof typeof STATUS_LABEL].toLowerCase()}` : ', sin registros'}`}
+                      aria-label={`${label}${k ? `, ${kcal(k)} kcal, ${STATUS_LABEL[status as keyof typeof STATUS_LABEL].toLowerCase()}` : planned ? ', con plan pendiente' : ', sin registros'}`}
                       aria-current={day === date ? 'date' : undefined}
                     >
                       <span className="cal-num">{parseIso(day).getDate()}</span>
@@ -122,7 +134,9 @@ export function CalendarMonth({ date, onPick }: { date: string; onPick: (date: s
       </table>
 
       <ul className="cal-legend">
-        {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[]).map((s) => (
+        {(Object.keys(STATUS_LABEL) as (keyof typeof STATUS_LABEL)[])
+          .filter((s) => s !== 'planned' || (plannedDays?.size ?? 0) > 0)
+          .map((s) => (
           <li key={s} className={`status-${s}`}>
             <span className="cal-mark" aria-hidden="true" />
             {STATUS_LABEL[s]}

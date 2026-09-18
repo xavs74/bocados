@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Food } from '../db'
-import { buildPrompt, extractJson, foodNamesForPrompt, matchFood, parsePlan } from './planImport'
+import type { Food, Recipe } from '../db'
+import { buildPrompt, extractJson, findRecipes, foodNamesForPrompt, matchFood, parsePlan, sameWord } from './planImport'
 
 const answer = `Claro, aquí tienes tu plan:
 
@@ -77,6 +77,50 @@ describe('matchFood', () => {
   it('gives up when nothing is close', () => {
     expect(matchFood('tofu marinado', foods)).toBeNull()
   })
+
+  // The bug: "claras de huevo" became "Huevo", so eggs appeared twice in one breakfast.
+  const eggs = [food(10, 'Huevo'), food(11, 'Clara de huevo')]
+
+  it('tells egg whites apart from whole eggs, plural or not', () => {
+    expect(matchFood('claras de huevo', eggs)?.food.id).toBe(11)
+    expect(matchFood('clara de huevo', eggs)?.food.id).toBe(11)
+    expect(matchFood('huevos', eggs)?.food.id).toBe(10)
+    expect(matchFood('huevo', eggs)?.food.id).toBe(10)
+  })
+
+  it('prefers the food whose whole name is covered', () => {
+    expect(matchFood('tomates', [food(20, 'Tomate'), food(21, 'Tomate triturado en conserva')])?.food.id).toBe(20)
+  })
+})
+
+describe('sameWord', () => {
+  it('treats Spanish plurals as the same word', () => {
+    expect(sameWord('claras', 'clara')).toBe(true)
+    expect(sameWord('tomate', 'tomates')).toBe(true)
+  })
+
+  it('keeps short and unrelated words apart', () => {
+    expect(sameWord('pan', 'panceta')).toBe(false)
+    expect(sameWord('leche', 'lechuga')).toBe(false)
+  })
+})
+
+describe('findRecipes', () => {
+  const recipe = { id: 1, name: 'Arroz con pollo', servings: 4, foodId: 99, createdAt: 0, ingredients: [
+    { foodId: 1, name: 'Arroz', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 400, amount: { quantity: 400 } },
+    { foodId: 4, name: 'Pollo', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 600, amount: { quantity: 600 } },
+  ] } satisfies Recipe
+
+  it('spots a recipe when all its ingredients are in the meal', () => {
+    const hits = findRecipes([{ key: 'a', foodId: 1, grams: 80 }, { key: 'b', foodId: 4, grams: 150 }, { key: 'c', foodId: 3, grams: 200 }], [recipe])
+    expect(hits).toHaveLength(1)
+    expect(hits[0].keys).toEqual(['a', 'b'])
+    expect(hits[0].grams).toBe(230)
+  })
+
+  it('ignores a meal that only has part of the recipe', () => {
+    expect(findRecipes([{ key: 'a', foodId: 1, grams: 80 }], [recipe])).toEqual([])
+  })
 })
 
 describe('buildPrompt', () => {
@@ -96,6 +140,11 @@ describe('buildPrompt', () => {
     const prompt = buildPrompt(goals, { days: 7 })
     expect(prompt).toContain('crudo')
     expect(prompt).toContain('250 g de arroz cocido, escribe 80 g de arroz')
+  })
+
+  it('lists the person\'s recipes so the assistant can use them whole', () => {
+    const prompt = buildPrompt(goals, { days: 7, recipes: [{ name: 'Arroz con pollo', servingGrams: 250 }] })
+    expect(prompt).toContain('Arroz con pollo (1 ración = 250 g)')
   })
 
   it('offers the app\'s own food names when given them', () => {

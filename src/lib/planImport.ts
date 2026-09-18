@@ -1,4 +1,4 @@
-import { MEALS, MEAL_LABEL, type Food, type Meal } from '../db'
+import { MEALS, MEAL_LABEL, type Food, type Meal, type Recipe } from '../db'
 import { SUPERMARKET_CATEGORY } from './categories'
 import { weekdayName } from './dates'
 import { goalGrams, type Goals } from './nutrition'
@@ -28,7 +28,7 @@ export const fold = (s: string) =>
  * model not to bother with calories: Bocados works those out from its own food
  * data.
  */
-export function buildPrompt(goals: Goals, options: { days: number; notes?: string; foodNames?: string[] }): string {
+export function buildPrompt(goals: Goals, options: { days: number; notes?: string; foodNames?: string[]; recipes?: { name: string; servingGrams: number }[] }): string {
   const g = goalGrams(goals)
   const meals = MEALS.map((m) => MEAL_LABEL[m].toLowerCase()).join(', ')
   const low = Math.round((goals.kcal * 0.95) / 10) * 10
@@ -55,6 +55,9 @@ export function buildPrompt(goals: Goals, options: { days: number; notes?: strin
     '- Alimentos sencillos y comunes en España, con nombre genérico. Evita marcas y platos complicados.',
     names ? `- Usa preferiblemente estos nombres, tal cual, porque son los que reconoce mi aplicación: ${names}.` : '',
     '- Puedes usar otros alimentos si hacen falta, pero con nombres genéricos y sencillos.',
+    options.recipes?.length
+      ? `- Tengo estas recetas; si encajan, úsalas como un solo alimento con su nombre y los gramos que toque: ${options.recipes.map((r) => `${r.name} (1 ración = ${Math.round(r.servingGrams)} g)`).join(', ')}.`
+      : '',
     '',
     'Responde SOLO con este JSON, sin texto alrededor:',
     '{"dias":[{"dia":"lunes","kcal_estimado":0,"comidas":{"desayuno":[{"alimento":"copos de avena","gramos":60}],"comida":[],"merienda":[],"cena":[]}}]}',
@@ -191,26 +194,76 @@ export interface Match {
   score: number
 }
 
+/** Words that don't tell foods apart. */
+const STOPWORDS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'con', 'sin', 'en', 'a', 'al', 'y', 'o', 'un', 'una', 'para', 'por'])
+
+const words = (text: string) =>
+  fold(text)
+    .split(/[^a-z0-9ñ]+/)
+    .filter((w) => w.length > 1 && !STOPWORDS.has(w))
+
 /**
- * Best food for a name from the plan. Every word of the name has to appear for
- * a full score; shorter food names win ties, so "arroz blanco" beats "arroz
- * blanco con leche".
+ * Same word, allowing Spanish plurals: "claras" is "clara", "tomates" is
+ * "tomate". Short words must match exactly, so "pan" isn't "panceta".
+ */
+export function sameWord(a: string, b: string): boolean {
+  if (a === b) return true
+  if (a.length < 4 || b.length < 4) return false
+  const [short, long] = a.length < b.length ? [a, b] : [b, a]
+  return long.startsWith(short) && long.length - short.length <= 2
+}
+
+/**
+ * Best food for a name from the plan. It must cover at least half the words of
+ * the name; among those, the food whose own name is covered most wins, so
+ * "claras de huevo" picks "Clara de huevo" and "huevos" picks "Huevo".
+ * Qualifiers in brackets ("(crudo)") don't count against a food.
  */
 export function matchFood(name: string, foods: Food[]): Match | null {
-  const words = fold(name)
-    .split(/[\s,]+/)
-    .filter((w) => w.length > 2)
-  if (!words.length) return null
+  const wanted = words(name)
+  if (!wanted.length) return null
 
-  let best: Match | null = null
+  let best: (Match & { precision: number }) | null = null
   for (const food of foods) {
-    const hay = fold(food.name)
-    const hits = words.filter((w) => hay.includes(w)).length
-    if (!hits) continue
-    const score = hits / words.length
-    if (!best || score > best.score || (score === best.score && food.name.length < best.food.name.length)) best = { food, score }
+    const own = words(food.name.replace(/\([^)]*\)/g, ''))
+    if (!own.length) continue
+    const recall = wanted.filter((w) => own.some((o) => sameWord(w, o))).length / wanted.length
+    if (recall < 0.5) continue
+    const precision = own.filter((o) => wanted.some((w) => sameWord(w, o))).length / own.length
+    const better =
+      !best ||
+      recall > best.score ||
+      (recall === best.score && precision > best.precision) ||
+      (recall === best.score && precision === best.precision && food.name.length < best.food.name.length)
+    if (better) best = { food, score: recall, precision }
   }
-  return best && best.score >= 0.5 ? best : null
+  return best ? { food: best.food, score: best.score } : null
+}
+
+/** A recipe whose every ingredient turned up in one meal of the plan. */
+export interface RecipeHit {
+  recipe: Recipe
+  /** The rows the recipe would replace. */
+  keys: string[]
+  /** Their grams added up. */
+  grams: number
+}
+
+/**
+ * Finds recipes hiding in a meal: when all the ingredients of a recipe (two or
+ * more) appear among the meal's foods, the meal is probably that dish.
+ */
+export function findRecipes(rows: { key: string; foodId?: number; grams: number }[], recipes: Recipe[]): RecipeHit[] {
+  const hits: RecipeHit[] = []
+  for (const recipe of recipes) {
+    const ids = [...new Set(recipe.ingredients.map((i) => i.foodId))]
+    if (ids.length < 2 || !recipe.foodId) continue
+    const matched = rows.filter((r) => r.foodId !== undefined && ids.includes(r.foodId))
+    if (ids.every((id) => matched.some((r) => r.foodId === id))) {
+      hits.push({ recipe, keys: matched.map((r) => r.key), grams: matched.reduce((g, r) => g + r.grams, 0) })
+    }
+  }
+  return hits
 }
 
 export const dayName = (index: number) => weekdayName(`2026-09-${14 + index}`)
