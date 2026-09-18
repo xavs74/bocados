@@ -3292,38 +3292,16 @@ kbd {
   overflow: hidden;
 }
 
-/* ---------- First-run setup ---------- */
+/* ---------- Welcome and no-goal state ---------- */
 
-.onboarding {
-  position: fixed;
-  top: var(--vv-top, 0px);
-  left: 0;
-  right: 0;
-  height: var(--vv-height, 100%);
-  z-index: 60;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--bg);
-  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
-}
-
-.onboarding-card {
+.welcome {
   display: grid;
-  gap: 14px;
-  max-width: 520px;
-  margin: 0 auto;
-}
-
-.onboarding-card p {
-  margin: 0;
+  gap: 12px;
   line-height: 1.5;
 }
 
-.onboarding-actions {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  margin-top: 8px;
+.welcome p {
+  margin: 0;
 }
 
 .choice-card.selected {

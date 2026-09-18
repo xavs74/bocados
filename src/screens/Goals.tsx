@@ -175,7 +175,7 @@ const NUM_FIELDS = [
   ['weightKg', 'Peso (kg)'],
 ] as const
 
-export function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
+function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
   const [texts, setTexts] = useState(() =>
     Object.fromEntries(NUM_FIELDS.map(([k]) => [k, profile[k] === undefined ? '' : inputNum(profile[k])])),
   )
@@ -271,7 +271,7 @@ export function Calculator({ profile, onChange }: { profile: Partial<Profile>; o
   )
 }
 
-export function Breakdown({ profile }: { profile: Profile }) {
+function Breakdown({ profile }: { profile: Profile }) {
   const basal = bmr(profile)
   const burn = tdee(profile)
   const target = targetKcal(profile)
