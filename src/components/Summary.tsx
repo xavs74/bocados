@@ -19,9 +19,43 @@ interface Props {
   isPast: boolean
   /** Calories still planned for the day and not eaten yet. */
   plannedKcal?: number
+  /** False until the person chooses a goal: no targets are shown then. */
+  goalSet?: boolean
 }
 
-export function Summary({ totals, goals, isPast, plannedKcal = 0 }: Props) {
+/** Before there's a goal: what was eaten, and a way to set one. Nothing pretends to be personal. */
+function NoGoalSummary({ totals }: { totals: Nutrients }) {
+  const split = calorieSplit(totals)
+  const hasFood = totals.carbs + totals.protein + totals.fat > 0
+  return (
+    <section className="card summary" aria-label="Resumen del día">
+      <div className="no-goal">
+        <strong>{kcal(totals.kcal)}</strong>
+        <span>kcal comidas hoy</span>
+      </div>
+      <ul className="ring-legend" aria-label="Reparto de calorías">
+        {MACROS.map((m) => (
+          <li key={m} className={`macro-${m}`}>
+            <span className="swatch" aria-hidden="true" />
+            <span>{MACRO_SHORT[m]}</span>
+            <strong>{hasFood ? pct(split[m]) : '–'}</strong>
+          </li>
+        ))}
+      </ul>
+      <div className="no-goal-banner">
+        <p>
+          <strong>Aún no tienes objetivo.</strong> Calcúlalo en un minuto para ver lo que te queda cada día.
+        </p>
+        <a className="btn primary small" href="#/goals">
+          Calcular mi objetivo
+        </a>
+      </div>
+    </section>
+  )
+}
+
+export function Summary({ totals, goals, isPast, plannedKcal = 0, goalSet = true }: Props) {
+  if (!goalSet) return <NoGoalSummary totals={totals} />
   const remaining = goals.kcal - totals.kcal
   const progress = goals.kcal > 0 ? totals.kcal / goals.kcal : 0
   const split = calorieSplit(totals)

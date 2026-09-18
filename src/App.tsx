@@ -1,3 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Onboarding } from './components/Onboarding'
+import { db } from './db'
+import { useGoalsState } from './hooks'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
@@ -37,6 +41,11 @@ export default function App() {
     mainRef.current?.scrollTo(0, 0)
   }, [tab])
 
+  const { set: goalsSet, loaded } = useGoalsState()
+  const skipped = useLiveQuery(() => db.settings.get('onboardingSkipped').then((r) => !!r?.value))
+  const [setupDone, setSetupDone] = useState(false)
+  const showSetup = loaded && skipped === false && !goalsSet && !setupDone
+
   return (
     <div className="app">
       <header className="topbar">
@@ -69,6 +78,7 @@ export default function App() {
         </div>
       </main>
       <ConfirmHost />
+      {showSetup && <Onboarding onDone={() => setSetupDone(true)} />}
     </div>
   )
 }

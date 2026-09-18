@@ -8,7 +8,7 @@ import { RepeatSheet } from '../components/RepeatSheet'
 import { MacroCols, MacroColsHead } from '../components/MacroCols'
 import { Summary } from '../components/Summary'
 import { MEALS, MEAL_LABEL, db, type Entry, type Meal } from '../db'
-import { useGoals } from '../hooks'
+import { useGoalsState } from '../hooks'
 import { addDays, dayLabel, fullDate, isoDate } from '../lib/dates'
 import { grams, kcal, num } from '../lib/format'
 import { mealForNow } from '../lib/meals'
@@ -27,7 +27,7 @@ export function Today() {
   // Laptop: the docked add panel's meal, and a counter that refocuses its search.
   const [panelMeal, setPanelMeal] = useState<Meal>(mealForNow)
   const [panelFocus, setPanelFocus] = useState(0)
-  const goals = useGoals()
+  const { goals, set: goalSet } = useGoalsState()
   const entries = useLiveQuery(() => db.entries.where('date').equals(date).sortBy('createdAt'), [date])
   const planned = useLiveQuery(() => plannedBetween(date, date), [date])
 
@@ -111,7 +111,7 @@ export function Today() {
 
       <div className="today-grid">
         <div className="today-summary">
-          <Summary totals={totals} goals={goals} isPast={date < isoDate()} plannedKcal={plannedTotals(planned ?? []).kcal} />
+          <Summary totals={totals} goals={goals} isPast={date < isoDate()} plannedKcal={plannedTotals(planned ?? []).kcal} goalSet={goalSet} />
           {laptop && (
             <section className="card pad" aria-label="Calendario">
               <CalendarMonth key={date.slice(0, 7)} date={date} onPick={setDate} />
