@@ -38,3 +38,10 @@ export function moveDivider(split: Split, divider: 0 | 1, position: number): Spl
 function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max)
 }
+
+// Each preset leads with the macro in its name, so the difference is obvious.
+export const PRESETS: { name: string; split: Split }[] = [
+  { name: 'Equilibrado', split: { carbs: 50, protein: 20, fat: 30 } },
+  { name: 'Alto en proteína', split: { carbs: 35, protein: 40, fat: 25 } },
+  { name: 'Bajo en carbohidratos', split: { carbs: 20, protein: 35, fat: 45 } },
+]

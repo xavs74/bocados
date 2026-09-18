@@ -1,3 +1,4 @@
+import { goalsAreSet } from '../lib/goals'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import { SplitEditor } from '../components/SplitEditor'
@@ -17,15 +18,9 @@ import {
 } from '../lib/energy'
 import { LOCALE, inputNum, kcal, parseNum } from '../lib/format'
 import { MACROS, MACRO_SHORT, type Goals as GoalsT } from '../lib/nutrition'
-import type { Split } from '../lib/split'
+import { PRESETS } from '../lib/split'
 import { askConfirm } from '../lib/confirm'
 
-// Each preset leads with the macro in its name, so the difference is obvious.
-const PRESETS: { name: string; split: Split }[] = [
-  { name: 'Equilibrado', split: { carbs: 50, protein: 20, fat: 30 } },
-  { name: 'Alto en proteína', split: { carbs: 35, protein: 40, fat: 25 } },
-  { name: 'Bajo en carbohidratos', split: { carbs: 20, protein: 35, fat: 45 } },
-]
 
 export function Goals() {
   const row = useLiveQuery(() => db.settings.get('goals').then((r) => r ?? null))
@@ -91,7 +86,8 @@ export function Goals() {
 function GoalsForm({ initial }: { initial: GoalsT }) {
   const [goals, setGoals] = useState<GoalsT>(initial)
   const [kcalText, setKcalText] = useState(String(initial.kcal))
-  const mode = goals.mode ?? 'manual'
+  // New people start on the calculator; older manual goals had no mode.
+  const mode = goals.mode ?? (goalsAreSet(initial) ? 'manual' : 'calculated')
 
   function update(next: GoalsT) {
     // In calculated mode the target follows the profile whenever it's complete.
@@ -113,8 +109,8 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
         <div className="segmented two" role="radiogroup" aria-label="Cómo fijar las calorías">
           {(
             [
+              ['calculated', 'Calcular (recomendado)'],
               ['manual', 'Fijar yo'],
-              ['calculated', 'Calcular'],
             ] as const
           ).map(([m, label]) => (
             <button key={m} type="button" role="radio" aria-checked={mode === m} className={mode === m ? 'active' : ''} onClick={() => setMode(m)}>
@@ -179,7 +175,7 @@ const NUM_FIELDS = [
   ['weightKg', 'Peso (kg)'],
 ] as const
 
-function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
+export function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
   const [texts, setTexts] = useState(() =>
     Object.fromEntries(NUM_FIELDS.map(([k]) => [k, profile[k] === undefined ? '' : inputNum(profile[k])])),
   )
@@ -275,7 +271,7 @@ function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange
   )
 }
 
-function Breakdown({ profile }: { profile: Profile }) {
+export function Breakdown({ profile }: { profile: Profile }) {
   const basal = bmr(profile)
   const burn = tdee(profile)
   const target = targetKcal(profile)
