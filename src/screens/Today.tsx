@@ -13,7 +13,7 @@ import { addDays, dayLabel, fullDate, isoDate } from '../lib/dates'
 import { grams, kcal, num } from '../lib/format'
 import { mealForNow } from '../lib/meals'
 import { scale, sum } from '../lib/nutrition'
-import { eatPlanned, eatPlannedMeal, plannedBetween } from '../lib/plan'
+import { eatPlanned, eatPlannedMeal, plannedBetween, plannedTotals } from '../lib/plan'
 import { useIsLaptop } from '../lib/useMediaQuery'
 
 export function Today() {
@@ -111,7 +111,7 @@ export function Today() {
 
       <div className="today-grid">
         <div className="today-summary">
-          <Summary totals={totals} goals={goals} isPast={date < isoDate()} />
+          <Summary totals={totals} goals={goals} isPast={date < isoDate()} plannedKcal={plannedTotals(planned ?? []).kcal} />
           {laptop && (
             <section className="card pad" aria-label="Calendario">
               <CalendarMonth key={date.slice(0, 7)} date={date} onPick={setDate} />
@@ -124,6 +124,7 @@ export function Today() {
             const items = list.filter((e) => e.meal === meal)
             const toEat = (planned ?? []).filter((p) => p.meal === meal)
             const mealTotals = sum(items.map((e) => scale(e.per100, e.grams)))
+            const plannedKcal = plannedTotals((planned ?? []).filter((p) => p.meal === meal)).kcal
             return (
               <section className={`card meal ${laptop && panelMeal === meal ? 'targeted' : ''}`} key={meal} aria-labelledby={`meal-${meal}`}>
                 <header className="meal-header">
@@ -131,7 +132,12 @@ export function Today() {
                   {laptop ? (
                     items.length > 0 && <MacroCols n={mealTotals} strong />
                   ) : (
-                    items.length > 0 && <span className="meal-kcal">{kcal(mealTotals.kcal)} kcal</span>
+                    (items.length > 0 || plannedKcal > 0) && (
+                      <span className="meal-kcal">
+                        {items.length > 0 && `${kcal(mealTotals.kcal)} kcal`}
+                        {plannedKcal > 0 && <span className="meal-planned">{items.length > 0 ? ' + ' : ''}{kcal(plannedKcal)} kcal previstas</span>}
+                      </span>
+                    )
                   )}
                 </header>
                 {laptop && items.length > 0 && (

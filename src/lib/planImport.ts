@@ -70,7 +70,7 @@ export function buildPrompt(goals: Goals, options: { days: number; notes?: strin
  * Food names to offer the assistant: the ones this person uses most first,
  * then common staples, so the answer comes back in words the app matches.
  */
-export function foodNamesForPrompt(foods: Food[], limit = 70): string[] {
+export function foodNamesForPrompt(foods: Food[], limit = 220): string[] {
   // Brand products are left out: the prompt asks for generic foods.
   const generic = foods.filter((f) => f.category !== SUPERMARKET_CATEGORY)
   const used = generic.filter((f) => f.lastUsed).sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0))

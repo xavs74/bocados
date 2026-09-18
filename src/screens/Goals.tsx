@@ -18,6 +18,7 @@ import {
 import { LOCALE, inputNum, kcal, parseNum } from '../lib/format'
 import { MACROS, MACRO_SHORT, type Goals as GoalsT } from '../lib/nutrition'
 import type { Split } from '../lib/split'
+import { askConfirm } from '../lib/confirm'
 
 // Each preset leads with the macro in its name, so the difference is obvious.
 const PRESETS: { name: string; split: Split }[] = [
@@ -34,7 +35,7 @@ export function Goals() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function onImport(file: File) {
-    if (!confirm('Al importar se reemplazan todos los alimentos, los días registrados y los objetivos de este dispositivo. ¿Continuar?')) return
+    if (!(await askConfirm('Al importar se reemplazan todos los alimentos, los días registrados y los objetivos de este dispositivo.', { title: '¿Importar la copia?', confirmLabel: 'Importar', danger: true }))) return
     try {
       const r = await importBackup(file)
       setGeneration((g) => g + 1)

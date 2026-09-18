@@ -12,6 +12,7 @@ import { kcal, matches, num } from '../lib/format'
 import { kcalLooksWrong } from '../lib/nutrition'
 import { useIsLaptop } from '../lib/useMediaQuery'
 import { MacroCols, MacroColsHead } from '../components/MacroCols'
+import { askConfirm } from '../lib/confirm'
 
 export function Foods() {
   const laptop = useIsLaptop()
@@ -45,7 +46,7 @@ export function Foods() {
   const missing = useMemo(() => (foods ? missingBasicFoods(foods).length : 0), [foods])
 
   async function remove(food: Food) {
-    if (!confirm(`¿Borrar «${food.name}»? Los días ya registrados conservan sus datos.`)) return
+    if (!(await askConfirm('Los días ya registrados conservan sus datos.', { title: `¿Borrar «${food.name}»?`, confirmLabel: 'Borrar', danger: true }))) return
     await db.foods.delete(food.id)
     setEditing(null)
   }
@@ -53,7 +54,7 @@ export function Foods() {
   async function removeSelected() {
     if (!selected?.size) return
     const n = selected.size
-    if (!confirm(`¿Borrar ${n} ${n === 1 ? 'alimento' : 'alimentos'}? Los días ya registrados conservan sus datos.`)) return
+    if (!(await askConfirm('Los días ya registrados conservan sus datos.', { title: `¿Borrar ${n} ${n === 1 ? 'alimento' : 'alimentos'}?`, confirmLabel: 'Borrar', danger: true }))) return
     await db.foods.bulkDelete([...selected])
     setSelected(null)
   }

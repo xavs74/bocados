@@ -4,6 +4,7 @@ import { Foods } from './screens/Foods'
 import { Plan } from './screens/Plan'
 import { Goals } from './screens/Goals'
 import { Today } from './screens/Today'
+import { ConfirmHost } from './components/ConfirmHost'
 
 const TABS = ['today', 'plan', 'foods', 'goals'] as const
 type Tab = (typeof TABS)[number]
@@ -67,6 +68,7 @@ export default function App() {
           {tab === 'goals' && <Goals />}
         </div>
       </main>
+      <ConfirmHost />
     </div>
   )
 }

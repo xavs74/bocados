@@ -5,6 +5,7 @@ import { MACROS, MACRO_LABEL } from '../lib/nutrition'
 import { deleteRecipe, perServing, recipeTotals, saveRecipe, servingGrams, totalGrams } from '../lib/recipes'
 import { PickFoodSheet } from './PickFoodSheet'
 import { Sheet } from './Sheet'
+import { askConfirm } from '../lib/confirm'
 
 interface Props {
   recipe?: Recipe
@@ -33,7 +34,7 @@ export function RecipeForm({ recipe, onClose }: Props) {
 
   async function remove() {
     if (!recipe) return
-    if (!confirm(`¿Borrar la receta «${recipe.name}»? Los días ya registrados conservan sus datos.`)) return
+    if (!(await askConfirm('Los días ya registrados conservan sus datos.', { title: `¿Borrar la receta «${recipe.name}»?`, confirmLabel: 'Borrar', danger: true }))) return
     await deleteRecipe(recipe)
     onClose()
   }

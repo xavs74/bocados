@@ -17,9 +17,11 @@ interface Props {
   goals: Goals
   /** A finished day: its balance is what was eaten, not a forecast. */
   isPast: boolean
+  /** Calories still planned for the day and not eaten yet. */
+  plannedKcal?: number
 }
 
-export function Summary({ totals, goals, isPast }: Props) {
+export function Summary({ totals, goals, isPast, plannedKcal = 0 }: Props) {
   const remaining = goals.kcal - totals.kcal
   const progress = goals.kcal > 0 ? totals.kcal / goals.kcal : 0
   const split = calorieSplit(totals)
@@ -38,6 +40,11 @@ export function Summary({ totals, goals, isPast }: Props) {
       </div>
       <p className="ring-caption">
         {kcal(totals.kcal)} de {kcal(goals.kcal)} kcal
+        {plannedKcal > 0 && (
+          <span className="planned-caption">
+            Con lo planificado: <strong>{kcal(totals.kcal + plannedKcal)} kcal</strong>
+          </span>
+        )}
       </p>
 
       <ul className="ring-legend" aria-label="Reparto de calorías">

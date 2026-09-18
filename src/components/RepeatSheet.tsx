@@ -6,6 +6,7 @@ import { kcal } from '../lib/format'
 import { copyDay, describeItems, itemsFromEntries, logItems, logMealSet, recentDays, recentMeals, saveMealSet, totalsOf } from '../lib/mealSets'
 import { scale, sum } from '../lib/nutrition'
 import { Sheet } from './Sheet'
+import { askConfirm } from '../lib/confirm'
 
 interface Props {
   date: string
@@ -34,7 +35,7 @@ export function RepeatSheet({ date, meal, current, onClose }: Props) {
   }
 
   async function remove(set: MealSet) {
-    if (!confirm(`¿Borrar la comida guardada «${set.name}»? Los días ya registrados no cambian.`)) return
+    if (!(await askConfirm('Los días ya registrados no cambian.', { title: `¿Borrar «${set.name}»?`, confirmLabel: 'Borrar', danger: true }))) return
     await db.mealSets.delete(set.id)
   }
 

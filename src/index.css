@@ -2522,106 +2522,318 @@ kbd {
 
 /* ---------- Weekly plan ---------- */
 
-.week {
-  display: grid;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.day {
-  padding: 4px 0 10px;
-}
-
-.day.today {
-  border-color: color-mix(in srgb, var(--brand) 55%, var(--border));
-}
-
-.day-header {
+.plan-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 4px 8px 4px 12px;
+  margin: 8px 0 12px;
 }
 
-.day-title {
+.plan-title {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 6px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.plan-title .muted {
+  font-size: 0.9rem;
+}
+
+/* A navigation link rather than a button, so it doesn't compete with actions. */
+.link-btn {
+  margin-top: 2px;
+  padding: 2px 4px;
   border: 0;
-  border-radius: var(--radius-sm);
   background: none;
-  font-size: 1rem;
-}
-
-.day-title:hover {
-  background: var(--surface-2);
-}
-
-.day-kcal {
-  padding-right: 10px;
+  color: var(--brand);
   font-size: 0.88rem;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.day-kcal.over {
-  color: var(--warn);
-}
-
-.plan-meal {
-  padding: 2px 12px;
-}
-
-.plan-meal-head {
+.plan-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.78rem;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.plan-actions .btn {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.plan-actions .more-btn {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* Week strip */
+
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.strip-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.strip-day.selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.strip-day.today .strip-num {
+  color: var(--brand);
+}
+
+.strip-name {
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
-.icon-btn.small {
-  width: 30px;
-  height: 30px;
-  font-size: 1.2rem;
+.strip-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.strip-kcal {
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.strip-kcal.status-high,
+.strip-kcal.status-low {
+  color: var(--warn);
+}
+
+.strip-bar {
+  display: block;
+  width: 70%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.strip-bar span {
+  display: block;
+  height: 100%;
+  background: var(--good);
+}
+
+.strip-bar .status-high,
+.strip-bar .status-low {
+  background: var(--warn);
+}
+
+/* Selected day */
+
+.plan-day {
+  display: grid;
+  gap: 12px;
+}
+
+.day-summary {
+  padding: 16px 18px;
+}
+
+.day-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-summary-head .muted {
+  font-size: 0.85rem;
+}
+
+.day-summary .empty {
+  padding: 16px 0 4px;
+  text-align: left;
+}
+
+.day-kcal-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  margin: 12px 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-kcal-line strong {
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+
+.day-left {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--good);
+}
+
+.day-left.over {
+  color: var(--warn);
+}
+
+.day-macros {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.day-macro-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-summary .hint {
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
+.plan-meals {
+  display: grid;
+  gap: 12px;
+}
+
+.plan-meal-card {
+  padding: 4px 0 2px;
+}
+
+.plan-meal-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 18px 0;
+}
+
+.plan-meal-kcal {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-meal-macros {
+  margin: 2px 18px 6px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .plan-items {
   list-style: none;
-  margin: 0 0 4px;
-  padding: 0;
+  margin: 0;
+  padding: 0 8px 0 18px;
 }
 
 .plan-items li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
+  border-top: 1px solid var(--border);
 }
 
 .plan-name {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
-  font-size: 0.92rem;
+  padding: 8px 0;
+  font-size: 0.95rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.plan-amount {
+.plan-amount,
+.plan-item-kcal {
   flex: none;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
 }
 
-.plan-total {
-  margin: 16px 4px 0;
-  font-size: 0.88rem;
-  text-align: center;
+.plan-item-kcal {
+  min-width: 36px;
+  text-align: right;
+}
+
+.choice-card.danger strong {
+  color: var(--danger);
+}
+
+.choice-card:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.confirm-message {
+  margin: 4px 0 8px;
+  line-height: 1.5;
+}
+
+@media (min-width: 720px) {
+  .plan-actions .btn {
+    flex: none;
+  }
+
+  .plan-actions .more-btn {
+    margin-left: auto;
+  }
+
+  .plan-meals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (min-width: 1200px) {
+  .plan-head {
+    justify-content: flex-start;
+  }
+
+  .plan-title {
+    align-items: flex-start;
+    min-width: 260px;
+    text-align: left;
+  }
+
+  .plan-day {
+    grid-template-columns: 320px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .day-summary {
+    position: sticky;
+    top: 16px;
+  }
 }
 
 /* Planned foods inside the day screen */
@@ -2737,22 +2949,6 @@ kbd {
     center / 16px no-repeat;
 }
 
-@media (min-width: 720px) {
-  .week {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1200px) {
-  .week {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: start;
-  }
-
-  .plan .date-nav {
-    justify-content: flex-start;
-  }
-}
 
 /* ---------- Importing a plan ---------- */
 
@@ -2950,6 +3146,14 @@ kbd {
   color: var(--warn);
 }
 
+.recipe-hint .btn {
+  flex: none;
+  border-color: var(--brand);
+  background: var(--surface);
+  color: var(--brand);
+  font-weight: 700;
+}
+
 .recipe-hint {
   display: flex;
   align-items: center;
@@ -2969,4 +3173,15 @@ kbd {
 
 .cal-day.selected.status-planned .cal-mark {
   box-shadow: inset 0 0 0 1.5px var(--brand-ink);
+}
+
+.planned-caption {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+}
+
+.meal-planned {
+  color: var(--muted);
+  font-weight: 500;
 }
