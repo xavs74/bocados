@@ -4,8 +4,8 @@ import { MAX_PER_KG, MIN_PER_KG, defaultProteinPerKg, referenceWeight, splitFrom
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import { SplitEditor } from '../components/SplitEditor'
-import { DEFAULT_GOALS, db } from '../db'
-import { saveGoals } from '../hooks'
+import { DEFAULT_GOALS, MEALS, MEAL_LABEL, db, type Meal } from '../db'
+import { saveGoals, saveMeals, useMeals } from '../hooks'
 import { exportBackup, importBackup } from '../lib/backup'
 import {
   ACTIVITY,
@@ -50,6 +50,8 @@ export function Goals() {
       </div>
 
       {row !== undefined && <GoalsForm key={generation} initial={(row?.value as GoalsT | undefined) ?? DEFAULT_GOALS} />}
+
+      <MealsCard />
 
       <section className="card pad">
         <h2 className="section-title">Tus datos</h2>
@@ -190,6 +192,32 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
         <SplitEditor split={goals.split} kcal={goals.kcal} onChange={(split) => update({ ...goals, split, proteinPerKg: 0 })} />
       </section>
     </div>
+  )
+}
+
+/** Which meals the day has: some people skip merienda, others eat five times. */
+function MealsCard() {
+  const meals = useMeals()
+  function toggle(meal: Meal) {
+    const next = meals.includes(meal) ? meals.filter((m) => m !== meal) : [...meals, meal]
+    if (next.length) saveMeals(next)
+  }
+  return (
+    <section className="card pad">
+      <h2 className="section-title">Comidas del día</h2>
+      <p className="hint">Elige las que haces. Aparecen en Diario, en Plan y en el texto para importar planes. Lo ya apuntado no se pierde.</p>
+      <div className="meal-toggles">
+        {MEALS.map((m) => {
+          const on = meals.includes(m)
+          return (
+            <label key={m} className={`meal-toggle ${on ? 'on' : ''}`}>
+              <input type="checkbox" checked={on} disabled={on && meals.length === 1} onChange={() => toggle(m)} />
+              <span>{MEAL_LABEL[m]}</span>
+            </label>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

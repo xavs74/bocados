@@ -7,11 +7,11 @@ import { EditEntrySheet } from '../components/EditEntrySheet'
 import { RepeatSheet } from '../components/RepeatSheet'
 import { MacroCols, MacroColsHead } from '../components/MacroCols'
 import { Summary } from '../components/Summary'
-import { MEALS, MEAL_LABEL, db, type Entry, type Meal } from '../db'
-import { useGoalsState } from '../hooks'
+import { MEAL_LABEL, db, type Entry, type Meal } from '../db'
+import { useGoalsState, useMeals } from '../hooks'
 import { addDays, dayLabel, fullDate, isoDate } from '../lib/dates'
 import { grams, kcal, num } from '../lib/format'
-import { mealForNow } from '../lib/meals'
+import { mealForNow, visibleMeals } from '../lib/meals'
 import { scale, sum, type Nutrients } from '../lib/nutrition'
 import { eatPlanned, eatPlannedMeal, plannedBetween, plannedTotals } from '../lib/plan'
 import { useIsLaptop } from '../lib/useMediaQuery'
@@ -25,7 +25,8 @@ export function Today() {
   // A meal to repeat, 'day' for the whole day, or null when the sheet is closed.
   const [repeating, setRepeating] = useState<Meal | 'day' | null>(null)
   // Laptop: the docked add panel's meal, and a counter that refocuses its search.
-  const [panelMeal, setPanelMeal] = useState<Meal>(mealForNow)
+  const enabledMeals = useMeals()
+  const [panelMeal, setPanelMeal] = useState<Meal>(() => mealForNow())
   const [panelFocus, setPanelFocus] = useState(0)
   const { goals, set: goalSet } = useGoalsState()
   const entries = useLiveQuery(() => db.entries.where('date').equals(date).sortBy('createdAt'), [date])
@@ -120,7 +121,7 @@ export function Today() {
         </div>
 
         <div className="meals">
-          {MEALS.map((meal) => {
+          {visibleMeals(enabledMeals, [...list.map((e) => e.meal), ...(planned ?? []).map((p) => p.meal)]).map((meal) => {
             const items = list.filter((e) => e.meal === meal)
             const toEat = (planned ?? []).filter((p) => p.meal === meal)
             const mealTotals = sum(items.map((e) => scale(e.per100, e.grams)))
@@ -241,7 +242,7 @@ export function Today() {
       </div>
 
       {!laptop && (
-        <button className="fab" onClick={() => setAdding(isToday ? mealForNow() : 'lunch')} aria-label="Añadir alimento">
+        <button className="fab" onClick={() => setAdding(isToday ? mealForNow(enabledMeals) : enabledMeals[Math.floor(enabledMeals.length / 2)])} aria-label="Añadir alimento">
           +
         </button>
       )}

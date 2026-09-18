@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { MEALS, MEAL_LABEL, db, type Food, type Meal } from '../db'
-import { useGoals } from '../hooks'
+import { useGoalsState, useMeals } from '../hooks'
 import { addDays, weekdayName } from '../lib/dates'
 import { grams as gramsText, kcal, num, parseNum } from '../lib/format'
 import { scale } from '../lib/nutrition'
@@ -35,7 +35,10 @@ interface Row {
 type Step = 'prompt' | 'paste' | 'review'
 
 export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onClose: () => void }) {
-  const goals = useGoals()
+  // The prompt carries the goals, so it waits for them: built from the defaults
+  // while they load, a quick "Copiar" sent 1.700 kcal instead of the real goal.
+  const { goals, set: goalsSet, loaded: goalsLoaded } = useGoalsState()
+  const meals = useMeals()
   const foods = useLiveQuery(() => db.foods.toArray(), [])
   const recipes = useLiveQuery(() => db.recipes.toArray(), [])
   const [step, setStep] = useState<Step>('prompt')
@@ -57,9 +60,11 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
         notes,
         foodNames: foodNamesForPrompt(foods ?? []),
         recipes: (recipes ?? []).map((r) => ({ name: r.name, servingGrams: servingGrams(r.ingredients, r.servings) })),
+        meals,
       }),
-    [goals, notes, foods, recipes],
+    [goals, notes, foods, recipes, meals],
   )
+  const ready = goalsLoaded && foods !== undefined && recipes !== undefined
   const kept = rows.filter((r) => r.food && !r.skip)
   const unmatched = rows.filter((r) => !r.food && !r.skip)
 
@@ -175,8 +180,8 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
             <button className="btn ghost" onClick={() => setStep('paste')}>
               Ya lo tengo
             </button>
-            <button className="btn primary grow" onClick={copyPrompt}>
-              {copied ? '✓ Copiado' : 'Copiar el texto'}
+            <button className="btn primary grow" onClick={copyPrompt} disabled={!ready || !goalsSet}>
+              {!ready ? 'Preparando…' : copied ? '✓ Copiado' : 'Copiar el texto'}
             </button>
           </div>
         }
@@ -190,7 +195,18 @@ export function ImportPlanSheet({ weekStart, onClose }: { weekStart: string; onC
             <span>¿Algo que tener en cuenta? (opcional)</span>
             <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="sin lactosa, cocino solo los domingos…" />
           </label>
-          <pre className="prompt-box">{prompt}</pre>
+          {ready && !goalsSet ? (
+            <div className="no-goal-banner">
+              <p>
+                <strong>Primero necesitas un objetivo.</strong> El texto lleva tus calorías y macros; sin ellos, el plan no estaría hecho para ti.
+              </p>
+              <a className="btn primary small" href="#/goals" onClick={onClose}>
+                Ir a Objetivos
+              </a>
+            </div>
+          ) : (
+            <pre className="prompt-box">{ready ? prompt : 'Cargando tus objetivos…'}</pre>
+          )}
         </div>
       </Sheet>
     )

@@ -6,7 +6,8 @@ import { PickFoodSheet } from '../components/PickFoodSheet'
 import { Sheet } from '../components/Sheet'
 import { ShoppingSheet } from '../components/ShoppingSheet'
 import { MEALS, MEAL_LABEL, db, type Meal, type Planned } from '../db'
-import { useGoals } from '../hooks'
+import { useGoals, useMeals } from '../hooks'
+import { visibleMeals } from '../lib/meals'
 import { askConfirm } from '../lib/confirm'
 import { addDays, dayLabel, isoDate, parseIso, startOfWeek, weekLabel, weekdayName } from '../lib/dates'
 import { grams as gramsText, kcal, num } from '../lib/format'
@@ -21,6 +22,7 @@ export function Plan() {
   const [adding, setAdding] = useState<Meal | null>(null)
   const [sheet, setSheet] = useState<'more' | 'day' | 'shopping' | 'import' | null>(null)
   const goals = useGoals()
+  const enabledMeals = useMeals()
   const planned = useLiveQuery(() => plannedBetween(start, addDays(start, 6)), [start])
 
   const close = useCallback(() => setSheet(null), [])
@@ -74,7 +76,7 @@ export function Plan() {
       <div className="plan-day">
         <DaySummary items={dayItems} goals={goals} date={day.date} onMenu={() => setSheet('day')} />
         <div className="plan-meals">
-          {MEALS.map((meal) => (
+          {visibleMeals(enabledMeals, dayItems.map((p) => p.meal)).map((meal) => (
             <MealCard key={meal} meal={meal} items={day.meals[meal]} onAdd={() => setAdding(meal)} />
           ))}
         </div>
