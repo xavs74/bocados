@@ -552,6 +552,106 @@ input[type='range'] {
   padding: 20px;
 }
 
+/* Phones: a short card so the meals start on the first screen. */
+.summary.compact {
+  padding: 14px 16px 10px;
+}
+
+.compact-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary.compact .ring-wrap {
+  flex: none;
+  width: 104px;
+  margin: 0;
+}
+
+.summary.compact .ring circle {
+  stroke-width: 10;
+}
+
+.summary.compact .ring-center strong {
+  font-size: 1.35rem;
+}
+
+.summary.compact .ring-center span {
+  margin-top: 2px;
+  font-size: 0.72rem;
+}
+
+.compact-side {
+  flex: 1;
+  min-width: 0;
+}
+
+.compact-kcal {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.compact-kcal strong {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.compact-macros {
+  list-style: none;
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+}
+
+.compact-macros li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.compact-macros .bar {
+  height: 6px;
+}
+
+.compact-macro-name {
+  font-weight: 600;
+}
+
+.compact-macro-grams {
+  font-weight: 600;
+  text-align: right;
+}
+
+.compact-macro-grams .muted {
+  font-weight: 500;
+}
+
+.compact-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+}
+
+.compact-foot strong {
+  color: var(--text);
+}
+
+.compact-foot .link-btn {
+  flex: none;
+  margin: 0;
+  padding: 6px 2px;
+}
+
 .ring-wrap {
   position: relative;
   width: 168px;
@@ -594,7 +694,7 @@ input[type='range'] {
 }
 
 .ring-center strong.over {
-  color: var(--danger);
+  color: var(--warn);
 }
 
 .ring-center span {
@@ -890,6 +990,38 @@ input[type='range'] {
   border: 0;
   background: none;
   text-align: left;
+}
+
+/* Lo de siempre: the row opens the amount, the round button logs it as last time. */
+.usual-row {
+  display: flex;
+  align-items: center;
+  padding-right: 10px;
+}
+
+.usual-row .food-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.usual-add {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.usual-add:active {
+  background: var(--brand);
+  color: var(--brand-ink);
 }
 
 .food-row.with-text {
@@ -2450,6 +2582,12 @@ kbd {
 .choose-new {
   display: grid;
   gap: 10px;
+}
+
+.choice-card strong svg {
+  flex: none;
+  margin-right: 4px;
+  vertical-align: -4px;
 }
 
 .choice-card {

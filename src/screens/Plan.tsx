@@ -4,11 +4,13 @@ import { Chevron } from '../components/Chevron'
 import { ImportPlanSheet } from '../components/ImportPlanSheet'
 import { PickFoodSheet } from '../components/PickFoodSheet'
 import { Sheet } from '../components/Sheet'
-import { ShoppingSheet } from '../components/ShoppingSheet'
+import { ShareIcon, ShoppingSheet } from '../components/ShoppingSheet'
 import { MEALS, MEAL_LABEL, db, type Meal, type Planned } from '../db'
 import { useGoals, useMeals } from '../hooks'
 import { visibleMeals } from '../lib/meals'
+import { dayStatus, wellOver } from '../lib/calendar'
 import { askConfirm } from '../lib/confirm'
+import { canShare, planText, shareText } from '../lib/share'
 import { addDays, dayLabel, isoDate, parseIso, startOfWeek, weekLabel, weekdayName } from '../lib/dates'
 import { grams as gramsText, kcal, num } from '../lib/format'
 import { MACROS, MACRO_LABEL, MACRO_SHORT, goalGrams, scale, type Goals } from '../lib/nutrition'
@@ -103,6 +105,19 @@ export function Plan() {
           <div className="choose-new">
             <button
               className="choice-card"
+              disabled={!planned?.length}
+              onClick={async () => {
+                setSheet(null)
+                await shareText(`Plan de la semana (${weekLabel(start)})`, planText(week, enabledMeals))
+              }}
+            >
+              <strong>
+                <ShareIcon /> {canShare() ? 'Compartir el plan de la semana' : 'Copiar el plan de la semana'}
+              </strong>
+              <span className="muted">Por WhatsApp, por ejemplo, para quien cocina o hace la compra.</span>
+            </button>
+            <button
+              className="choice-card"
               onClick={async () => {
                 setSheet(null)
                 if (await askConfirm('Se reemplaza lo planificado esta semana por la semana anterior.', { title: '¿Copiar la semana anterior?', confirmLabel: 'Copiar' }))
@@ -127,7 +142,7 @@ export function Plan() {
           </div>
         </Sheet>
       )}
-      {sheet === 'day' && <DayMenu date={day.date} weekStart={start} onClose={close} />}
+      {sheet === 'day' && <DayMenu date={day.date} weekStart={start} text={planText([day], enabledMeals)} onClose={close} />}
       {sheet === 'shopping' && <ShoppingSheet weekStart={start} onClose={close} />}
       {sheet === 'import' && <ImportPlanSheet weekStart={start} onClose={close} />}
     </div>
@@ -141,7 +156,7 @@ function WeekStrip({ week, selected, today, goal, onSelect }: { week: ReturnType
       {week.map(({ date, meals }) => {
         const k = plannedTotals(MEALS.flatMap((m) => meals[m])).kcal
         const ratio = goal > 0 ? k / goal : 0
-        const state = !k ? 'empty' : ratio > 1.1 ? 'high' : ratio < 0.9 ? 'low' : 'good'
+        const state = dayStatus(k, goal)
         return (
           <button
             key={date}
@@ -186,7 +201,9 @@ function DaySummary({ items, goals, date, onMenu }: { items: Planned[]; goals: G
           <div className="day-kcal-line">
             <strong>{kcal(total.kcal)}</strong>
             <span className="muted"> de {kcal(goals.kcal)} kcal</span>
-            <span className={`day-left ${left < 0 ? 'over' : ''}`}>{left < 0 ? `${kcal(-left)} de más` : `faltan ${kcal(left)}`}</span>
+            <span className={`day-left ${wellOver(total.kcal, goals.kcal) ? 'over' : ''}`}>
+              {dayStatus(total.kcal, goals.kcal) === 'good' ? 'en tu objetivo' : left < 0 ? `${kcal(-left)} por encima` : `faltan ${kcal(left)}`}
+            </span>
           </div>
           <ul className="day-macros">
             {MACROS.map((m) => (
@@ -245,7 +262,7 @@ function MealCard({ meal, items, onAdd }: { meal: Meal; items: Planned[]; onAdd:
   )
 }
 
-function DayMenu({ date, weekStart, onClose }: { date: string; weekStart: string; onClose: () => void }) {
+function DayMenu({ date, weekStart, text, onClose }: { date: string; weekStart: string; text: string; onClose: () => void }) {
   const [copying, setCopying] = useState(false)
 
   if (copying) {
@@ -276,6 +293,19 @@ function DayMenu({ date, weekStart, onClose }: { date: string; weekStart: string
   return (
     <Sheet title={weekdayName(date)} onClose={onClose}>
       <div className="choose-new">
+        <button
+          className="choice-card"
+          disabled={!text}
+          onClick={async () => {
+            onClose()
+            await shareText(`Plan del ${weekdayName(date).toLowerCase()}`, text)
+          }}
+        >
+          <strong>
+            <ShareIcon /> {canShare() ? 'Compartir este día' : 'Copiar este día'}
+          </strong>
+          <span className="muted">Lo planificado, comida a comida, listo para enviar.</span>
+        </button>
         <button className="choice-card" onClick={() => setCopying(true)}>
           <strong>Copiar este día a otro</strong>
           <span className="muted">Reemplaza lo planificado en el día que elijas.</span>

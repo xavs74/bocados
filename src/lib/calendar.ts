@@ -21,6 +21,9 @@ export type DayStatus = 'empty' | 'low' | 'good' | 'high'
 /** Within 10 % of the goal counts as on target. */
 export const DAY_TOLERANCE = 0.1
 
+/** Over the goal by more than that margin: only then is it shown as a warning. */
+export const wellOver = (kcal: number, goal: number) => goal > 0 && kcal > goal * (1 + DAY_TOLERANCE)
+
 export function dayStatus(kcal: number | undefined, goal: number): DayStatus {
   if (!kcal) return 'empty'
   if (goal <= 0) return 'good'

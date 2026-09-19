@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { wellOver } from '../lib/calendar'
 import { isComplete, tdee } from '../lib/energy'
 import { kcal, num, pct } from '../lib/format'
 import {
@@ -21,7 +23,10 @@ interface Props {
   plannedKcal?: number
   /** False until the person chooses a goal: no targets are shown then. */
   goalSet?: boolean
+  /** Phones: a short summary that leaves room for the meals, with the rest a tap away. */
+  compact?: boolean
 }
+
 
 /** Before there's a goal: what was eaten, and a way to set one. Nothing pretends to be personal. */
 function NoGoalSummary({ totals }: { totals: Nutrients }) {
@@ -54,8 +59,71 @@ function NoGoalSummary({ totals }: { totals: Nutrients }) {
   )
 }
 
-export function Summary({ totals, goals, isPast, plannedKcal = 0, goalSet = true }: Props) {
-  if (!goalSet) return <NoGoalSummary totals={totals} />
+export function Summary(props: Props) {
+  const [open, setOpen] = useState(false)
+  if (props.goalSet === false) return <NoGoalSummary totals={props.totals} />
+  if (props.compact && !open) return <CompactSummary {...props} onOpen={() => setOpen(true)} />
+  return <FullSummary {...props} onClose={props.compact ? () => setOpen(false) : undefined} />
+}
+
+/**
+ * One short card: calories left in a small ring, and a bar per macro. The
+ * meals start right below it, on the first screen.
+ */
+function CompactSummary({ totals, goals, plannedKcal = 0, onOpen }: Props & { onOpen: () => void }) {
+  const remaining = goals.kcal - totals.kcal
+  const targets = goalGrams(goals)
+  const hasFood = totals.carbs + totals.protein + totals.fat > 0
+  return (
+    <section className="card summary compact" aria-label="Resumen del día">
+      <div className="compact-top">
+        <div className="ring-wrap">
+          <Ring progress={goals.kcal > 0 ? totals.kcal / goals.kcal : 0} split={hasFood ? calorieSplit(totals) : null} />
+          <div className="ring-center">
+            <strong className={wellOver(totals.kcal, goals.kcal) ? 'over' : ''}>{kcal(Math.abs(remaining))}</strong>
+            <span>{remaining < 0 ? 'por encima' : 'restantes'}</span>
+          </div>
+        </div>
+        <div className="compact-side">
+          <p className="compact-kcal">
+            <strong>{kcal(totals.kcal)}</strong> de {kcal(goals.kcal)} kcal
+          </p>
+          <ul className="compact-macros">
+            {MACROS.map((m) => {
+              const ratio = targets[m] > 0 ? totals[m] / targets[m] : 0
+              return (
+                <li key={m} className={`macro-${m}`}>
+                  <span className="compact-macro-name">{MACRO_SHORT[m]}</span>
+                  <span className="bar" aria-hidden="true">
+                    <span className="bar-fill" style={{ width: `${Math.min(ratio, 1) * 100}%` }} />
+                  </span>
+                  <span className="compact-macro-grams">
+                    {Math.round(totals[m])}
+                    <span className="muted">/{Math.round(targets[m])} g</span>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </div>
+      <div className="compact-foot">
+        {plannedKcal > 0 ? (
+          <span className="muted">
+            Con lo planificado: <strong>{kcal(totals.kcal + plannedKcal)} kcal</strong>
+          </span>
+        ) : (
+          <span />
+        )}
+        <button className="link-btn" onClick={onOpen} aria-expanded="false">
+          Ver detalle
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function FullSummary({ totals, goals, isPast, plannedKcal = 0, onClose }: Props & { onClose?: () => void }) {
   const remaining = goals.kcal - totals.kcal
   const progress = goals.kcal > 0 ? totals.kcal / goals.kcal : 0
   const split = calorieSplit(totals)
@@ -68,8 +136,8 @@ export function Summary({ totals, goals, isPast, plannedKcal = 0, goalSet = true
       <div className="ring-wrap">
         <Ring progress={progress} split={hasFood ? split : null} />
         <div className="ring-center">
-          <strong className={remaining < 0 ? 'over' : ''}>{kcal(Math.abs(remaining))}</strong>
-          <span>{remaining < 0 ? 'kcal de más' : 'kcal restantes'}</span>
+          <strong className={wellOver(totals.kcal, goals.kcal) ? 'over' : ''}>{kcal(Math.abs(remaining))}</strong>
+          <span>{remaining < 0 ? 'kcal por encima' : 'kcal restantes'}</span>
         </div>
       </div>
       <p className="ring-caption">
@@ -125,6 +193,14 @@ export function Summary({ totals, goals, isPast, plannedKcal = 0, goalSet = true
           )
         })}
       </ul>
+      {onClose && (
+        <div className="compact-foot">
+          <span />
+          <button className="link-btn" onClick={onClose} aria-expanded="true">
+            Ver menos
+          </button>
+        </div>
+      )}
     </section>
   )
 }

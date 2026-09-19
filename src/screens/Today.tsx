@@ -112,7 +112,7 @@ export function Today() {
 
       <div className="today-grid">
         <div className="today-summary">
-          <Summary totals={totals} goals={goals} isPast={date < isoDate()} plannedKcal={plannedTotals(planned ?? []).kcal} goalSet={goalSet} />
+          <Summary totals={totals} goals={goals} isPast={date < isoDate()} plannedKcal={plannedTotals(planned ?? []).kcal} goalSet={goalSet} compact={!laptop} />
           {laptop && (
             <section className="card pad" aria-label="Calendario">
               <CalendarMonth key={date.slice(0, 7)} date={date} onPick={setDate} />
