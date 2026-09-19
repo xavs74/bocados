@@ -20,6 +20,7 @@ export function ConfirmHost() {
 
   return (
     <Sheet
+      dismissible={false}
       title={request.title}
       onClose={() => answer(false)}
       footer={

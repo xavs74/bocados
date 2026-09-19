@@ -14,6 +14,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   return (
     <Sheet
+      dismissible={false}
       title="Bienvenido a Bocados"
       onClose={() => dismiss(false)}
       footer={

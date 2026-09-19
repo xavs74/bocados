@@ -1006,6 +1006,30 @@ input[type='range'] {
   }
 }
 
+.sheet-handle {
+  flex: none;
+  width: 36px;
+  height: 5px;
+  margin: 8px auto -4px;
+  border-radius: 3px;
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.sheet-handle + .sheet-header {
+  padding-top: 10px;
+}
+
+@media (min-width: 720px) {
+  .sheet-handle {
+    display: none;
+  }
+
+  .sheet-handle + .sheet-header {
+    padding-top: 16px;
+  }
+}
+
 .sheet-header {
   flex: none;
   display: flex;

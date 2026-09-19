@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useDragToClose } from '../lib/useDragToClose'
 import { settleViewport } from '../lib/viewport'
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
+  /** False for sheets that need an answer: no handle and no drag to close. */
+  dismissible?: boolean
 }
 
 /**
@@ -15,8 +18,14 @@ interface Props {
  * Rendered straight into <body>: inside the app's scrolling area, iOS Safari
  * clips fixed elements to that area, which cut the bottom of sheets off
  * behind the tab bar with no way to scroll to it.
+ *
+ * On phones it can be dragged down to close, unless it's not dismissible.
  */
-export function Sheet({ title, onClose, children, footer }: Props) {
+export function Sheet({ title, onClose, children, footer, dismissible = true }: Props) {
+  const backdropRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  useDragToClose(sheetRef, backdropRef, onClose, dismissible)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
@@ -31,8 +40,9 @@ export function Sheet({ title, onClose, children, footer }: Props) {
   useEffect(() => settleViewport, [])
 
   return createPortal(
-    <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="sheet-backdrop" ref={backdropRef} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="sheet" ref={sheetRef} role="dialog" aria-modal="true" aria-label={title}>
+        {dismissible && <div className="sheet-handle" aria-hidden="true" />}
         <header className="sheet-header">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
