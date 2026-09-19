@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
-import { MEAL_LABEL, db, gramsOf, type Food, type Meal } from '../db'
+import { MEAL_LABEL, db, gramsOf, type Amount, type Food, type Meal } from '../db'
 import { amountFrom, draftFrom, type AmountDraft } from '../lib/amount'
 import { categoryOf } from '../lib/categories'
 import { grams, kcal, matches, num } from '../lib/format'
+import { usualFoods, usualFrom, type UsualFood } from '../lib/usual'
 import { MIN_QUERY, productLabel, saveProduct, searchProducts, type Product } from '../lib/openFoodFacts'
 import { AmountEditor } from './AmountEditor'
 import { FoodForm } from './FoodForm'
@@ -52,9 +53,16 @@ function AddEntryFlow({ date, meal, onMealChange, onAdded, frame, docked, autoFo
   const [scanning, setScanning] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
-  function choose(f: Food) {
+  const [added, setAdded] = useState<string | null>(null)
+
+  function choose(f: Food, amount?: Amount) {
     setFood(f)
-    setDraft(draftFrom(f.lastAmount, f.servings))
+    setDraft(draftFrom(amount ?? f.lastAmount, f.servings))
+  }
+
+  async function quickAdd(f: Food, amount: Amount) {
+    await logFood(date, meal, f, amount)
+    setAdded(`${f.name} (${grams(gramsOf(amount))})`)
   }
 
   function backToSearch() {
@@ -124,15 +132,23 @@ function AddEntryFlow({ date, meal, onMealChange, onAdded, frame, docked, autoFo
     <>
       {frame(
         `Añadir a ${MEAL_LABEL[meal].toLowerCase()}`,
-        <FoodSearch
-          query={query}
-          onQuery={setQuery}
-          onPick={choose}
-          onCreate={() => setCreating({ name: query })}
-          onScan={() => setScanning(true)}
-          inputRef={searchRef}
-          autoFocus={autoFocus}
-        />,
+        <>
+          {added && (
+            <p className="added-note" role="status">
+              ✓ Añadido: {added}
+            </p>
+          )}
+          <FoodSearch
+            query={query}
+            onQuery={setQuery}
+            onPick={choose}
+            onCreate={() => setCreating({ name: query })}
+            onScan={() => setScanning(true)}
+            inputRef={searchRef}
+            autoFocus={autoFocus}
+            usual={{ date, meal, onAdd: quickAdd }}
+          />
+        </>,
       )}
       {creatingForm}
       {scanner}
@@ -194,15 +210,27 @@ export function AddEntryPanel({ date, meal, onMealChange, focusKey }: PanelProps
 interface SearchProps {
   query: string
   onQuery: (q: string) => void
-  onPick: (f: Food) => void
+  onPick: (f: Food, amount?: Amount) => void
   onCreate: () => void
   onScan: () => void
   inputRef: RefObject<HTMLInputElement | null>
   autoFocus: boolean
+  /** Shows "Lo de siempre" for this meal, with a button that logs each one straight away. */
+  usual?: { date: string; meal: Meal; onAdd: (f: Food, amount: Amount) => void }
 }
 
-export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus }: SearchProps) {
+export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus, usual }: SearchProps) {
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
+  const usualDate = usual?.date
+  const usualMeal = usual?.meal
+  const history = useLiveQuery(
+    () => (usualDate ? db.entries.where('date').between(usualFrom(usualDate), usualDate, true, true).toArray() : []),
+    [usualDate],
+  )
+  const usualList = useMemo(
+    () => (usualDate && usualMeal && history && foods ? usualFoods(history, usualMeal, usualDate, new Map(foods.map((f) => [f.id, f]))) : []),
+    [usualDate, usualMeal, history, foods],
+  )
   const [active, setActive] = useState(0)
   // Enter picks the highlighted food once there's a query or the arrows were used.
   const [navigated, setNavigated] = useState(false)
@@ -215,12 +243,13 @@ export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef,
       hits.sort((a, b) => (b.lastUsed ?? 0) - (a.lastUsed ?? 0))
       return { recent: [], rest: hits }
     }
+    const shown = new Set(usualList.map((u) => u.food.id))
     const recent = all
-      .filter((f) => f.lastUsed)
+      .filter((f) => f.lastUsed && !shown.has(f.id))
       .sort((a, b) => b.lastUsed! - a.lastUsed!)
       .slice(0, 8)
     return { recent, rest: all }
-  }, [foods, query])
+  }, [foods, query, usualList])
 
   // Keyboard order: recent first, then the rest.
   const flat = useMemo(() => [...recent, ...rest], [recent, rest])
@@ -276,6 +305,9 @@ export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef,
               <span>Crear un alimento nuevo</span>
             )}
           </button>
+          {usual && !query.trim() && usualList.length > 0 && (
+            <UsualGroup meal={usual.meal} items={usualList} onPick={onPick} onAdd={usual.onAdd} />
+          )}
           {recent.length > 0 && <FoodGroup title="Recientes" foods={recent} offset={0} active={query.trim() || navigated ? activeIndex : -1} onPick={onPick} />}
           {rest.length > 0 ? (
             <FoodGroup
@@ -360,6 +392,36 @@ export function BarcodeIcon() {
       <path d="M3 7V5.5A2.5 2.5 0 0 1 5.5 3H7M17 3h1.5A2.5 2.5 0 0 1 21 5.5V7M21 17v1.5a2.5 2.5 0 0 1-2.5 2.5H17M7 21H5.5A2.5 2.5 0 0 1 3 18.5V17" />
       <path d="M7 8v8M10.5 8v8M14 8v8M17 8v8" strokeWidth="1.6" />
     </svg>
+  )
+}
+
+function amountLabel(amount: Amount) {
+  const g = grams(gramsOf(amount))
+  if (!amount.serving) return g
+  return `${num(amount.quantity)} × ${amount.serving.label.replace(/^1\s+/, '')} · ${g}`
+}
+
+/** What the person usually eats in this meal, each with a button that logs it as last time. */
+function UsualGroup({ meal, items, onPick, onAdd }: { meal: Meal; items: UsualFood[]; onPick: (f: Food, amount: Amount) => void; onAdd: (f: Food, amount: Amount) => void }) {
+  return (
+    <section className="usual" aria-label="Lo de siempre">
+      <h3 className="group-title">Lo de siempre en {MEAL_LABEL[meal].toLowerCase()}</h3>
+      <ul className="food-list">
+        {items.map(({ food, amount }) => (
+          <li key={food.id} className="usual-row">
+            <button className="food-row" onClick={() => onPick(food, amount)}>
+              <span className="food-name">{food.name}</span>
+              <span className="food-meta">
+                {amountLabel(amount)} · {kcal((food.kcal * gramsOf(amount)) / 100)} kcal
+              </span>
+            </button>
+            <button className="usual-add" onClick={() => onAdd(food, amount)} aria-label={`Añadir ${food.name}, ${amountLabel(amount)}`}>
+              +
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
