@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { db } from '../db'
 import { addDays, weekLabel } from '../lib/dates'
 import { grams, num } from '../lib/format'
+import { canShare, shareText } from '../lib/share'
 import { categoryLookup, expandRecipes, plannedBetween, shoppingList, type ShoppingLine } from '../lib/plan'
 import { Sheet } from './Sheet'
 
@@ -33,9 +34,12 @@ export function ShoppingSheet({ weekStart, onClose }: { weekStart: string; onClo
     setBought(next)
   }
 
-  async function copy() {
-    const text = lines.map((l) => `- ${l.name}: ${amountText(l)}`).join('\n')
-    await navigator.clipboard.writeText(`Lista de la compra (${weekLabel(weekStart)})\n${text}`)
+  // What's already ticked off is in the basket: whoever gets the list doesn't need it.
+  const toBuy = lines.filter((l) => !bought.has(l.name))
+
+  async function share() {
+    const text = toBuy.map((l) => `- ${l.name}: ${amountText(l)}`).join('\n')
+    if ((await shareText(`Lista de la compra (${weekLabel(weekStart)})`, text)) !== 'copied') return
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -46,8 +50,14 @@ export function ShoppingSheet({ weekStart, onClose }: { weekStart: string; onClo
       onClose={onClose}
       footer={
         lines.length > 0 ? (
-          <button className="btn ghost block" onClick={copy}>
-            {copied ? '✓ Copiada' : 'Copiar la lista'}
+          <button className="btn primary block" onClick={share} disabled={toBuy.length === 0}>
+            {copied ? (
+              '✓ Copiada'
+            ) : (
+              <>
+                <ShareIcon /> {canShare() ? 'Compartir la lista' : 'Copiar la lista'}
+              </>
+            )}
           </button>
         ) : undefined
       }
@@ -75,5 +85,14 @@ export function ShoppingSheet({ weekStart, onClose }: { weekStart: string; onClo
         ))}
       </div>
     </Sheet>
+  )
+}
+
+export function ShareIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v12M7 8l5-5 5 5" />
+      <path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+    </svg>
   )
 }
