@@ -4,9 +4,13 @@
  * The app shell and sheets are fixed to the screen. When a phone keyboard opens,
  * iOS shrinks only the visual viewport, so anything sized to the full screen
  * ends up partly behind the keyboard with nothing left to scroll. This mirrors
- * the visual viewport into CSS variables (--vv-top, --vv-height) that the shell
- * and sheets use for their size, and flags when someone is typing so the tab
- * bar can step aside.
+ * the visual viewport into CSS variables (--vv-top, --vv-height) and flags when
+ * someone is typing, so the tab bar can step aside.
+ *
+ * The shell only follows those variables while the keyboard-open flag is set;
+ * the rest of the time it uses the full screen height. iOS sometimes keeps
+ * reporting the shrunken area after the keyboard has gone, and that used to
+ * leave the tab bar floating above the bottom of the screen.
  */
 let update: () => void = () => {}
 

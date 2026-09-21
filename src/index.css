@@ -115,11 +115,10 @@ a {
  */
 .app {
   position: fixed;
-  /* Sized to the visible area, which shrinks while a phone keyboard is open (see lib/viewport.ts). */
-  top: var(--vv-top, 0px);
+  top: 0;
   left: 0;
   right: 0;
-  height: var(--vv-height, 100%);
+  height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto minmax(0, 1fr);
@@ -1099,14 +1098,27 @@ input[type='range'] {
   font-size: 1.2rem;
 }
 
+/*
+ * Only while a phone keyboard is open does the app follow the measured visible
+ * area (see lib/viewport.ts). iOS sometimes keeps reporting the shrunken area
+ * after the keyboard closes, which used to strand the tab bar above the bottom
+ * of the screen with the add button hidden behind it; outside typing the full
+ * screen height is used instead, so a stale measurement can't do that.
+ */
+.keyboard-open .app,
+.keyboard-open .sheet-backdrop {
+  top: var(--vv-top, 0px);
+  height: var(--vv-height, 100dvh);
+}
+
 /* ---------- Sheet ---------- */
 
 .sheet-backdrop {
   position: fixed;
-  top: var(--vv-top, 0px);
+  top: 0;
   left: 0;
   right: 0;
-  height: var(--vv-height, 100%);
+  height: 100dvh;
   z-index: 50;
   display: flex;
   align-items: flex-end;
