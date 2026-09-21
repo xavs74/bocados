@@ -1,5 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Self-hosted so the app keeps its type offline and asks nothing of Google's servers.
+import '@fontsource-variable/dm-sans'
+import '@fontsource-variable/fraunces'
 import './index.css'
 import App from './App.tsx'
 import { migrateLegacyDb } from './db'

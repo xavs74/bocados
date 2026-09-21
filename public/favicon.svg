@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#2f7d5b"/><path transform="translate(4.8 4.8) scale(.7)" d="M16 3a13 13 0 1 0 12.9 11.4 4 4 0 0 1-5.2-4.1 4 4 0 0 1-3.6-6.8A13 13 0 0 0 16 3z" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#A9492A"/><svg x="3.2" y="6.66667" width="25.6" height="18.6667" viewBox="2 18 96 70"><path d="M6 60C32 74 64 32 94 40" fill="none" stroke="#F6EFE3" stroke-width="4" stroke-linecap="round"/>
+<path d="M0 0Q9.9-7.3 22 0Q9.9 7.3 0 0Z" fill="#F6EFE3" transform="translate(30.8 60.3) rotate(-61.2)"/>
+<path d="M0 0Q9-6.6 20 0Q9 6.6 0 0Z" fill="#E9DCC8" transform="translate(44 54.5) rotate(15.4)"/>
+<path d="M0 0Q10.8-7.9 24 0Q10.8 7.9 0 0Z" fill="#F6EFE3" transform="translate(59.4 46.7) rotate(-67.8)"/>
+<path d="M0 0Q9-6.6 20 0Q9 6.6 0 0Z" fill="#E9DCC8" transform="translate(74 40.9) rotate(25.8)"/>
+<path d="M0 0Q9.9-7.3 22 0Q9.9 7.3 0 0Z" fill="#F6EFE3" transform="translate(86.8 39) rotate(-40.7)"/>
+<ellipse cx="21.5" cy="72.4" rx="10" ry="13" fill="#E0A43A" transform="rotate(-5.6 21.5 72.4)"/>
+<ellipse cx="57.5" cy="58.6" rx="10" ry="13" fill="#F6EFE3" transform="rotate(-27.2 57.5 58.6)"/></svg></svg>

@@ -1,28 +1,35 @@
 :root {
-  --bg: #f6f5f1;
-  --surface: #ffffff;
-  --surface-2: #f0efe9;
-  --text: #1d1c19;
-  --muted: #75726a;
-  --border: #e4e2da;
-  --brand: #2f7d5b;
-  --brand-ink: #ffffff;
-  --brand-soft: #e3f1e9;
-  --danger: #c2413a;
-  --warn: #b7791f;
-  --warn-soft: #fbf0dc;
-  --good: #2f7d5b;
+  /* Mediterranean palette: terracota, azafrán, oliva on cream and charcoal. */
+  --bg: #f6efe3;
+  --surface: #fffbf4;
+  --surface-2: #efe5d5;
+  --text: #2a211b;
+  --muted: #6e6259;
+  --border: #e4d8c6;
+  --brand: #a9492a;
+  --brand-ink: #f6efe3;
+  --brand-soft: #f3e2d8;
+  --danger: #a3322a;
+  --warn: #9a6a15;
+  --warn-soft: #f7ebd5;
+  --good: #5c6b3a;
 
-  --carbs: #e0a33a;
-  --protein: #4f7fd9;
-  --fat: #d9577a;
+  /* Logo: the lighter leaf green, and the black olive. */
+  --leaf: #8a9a5b;
+  --olive-black: #2a211b;
+
+  --carbs: #e0a43a;
+  --protein: #a9492a;
+  --fat: #5c6b3a;
 
   --radius: 16px;
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(30, 28, 20, 0.05), 0 4px 16px rgba(30, 28, 20, 0.05);
   --nav-h: 64px;
 
-  font-family: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+
+  font-family: 'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.4;
   color: var(--text);
@@ -34,22 +41,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #131412;
-    --surface: #1c1d1b;
-    --surface-2: #262724;
-    --text: #efeee9;
-    --muted: #9c9a92;
-    --border: #2f302c;
-    --brand: #5cc295;
-    --brand-ink: #0d1a14;
-    --brand-soft: #1d3329;
-    --danger: #ef7b73;
-    --warn: #e5b45a;
+    --bg: #1e1814;
+    --surface: #2a211b;
+    --surface-2: #352a22;
+    --text: #f6efe3;
+    --muted: #c4b6a6;
+    --border: #433629;
+    --brand: #e08a63;
+    --brand-ink: #1e1814;
+    --brand-soft: #3b2a21;
+    --danger: #ef8f7c;
+    --warn: #e9b75c;
     --warn-soft: #3a2f1b;
-    --good: #5cc295;
-    --carbs: #eab45a;
-    --protein: #7ea3ec;
-    --fat: #eb7f9c;
+    --good: #a3b072;
+    --leaf: #a3b072;
+    --olive-black: #f6efe3;
+    --carbs: #e9b75c;
+    --protein: #e08a63;
+    --fat: #a3b072;
     --shadow: none;
     color-scheme: dark;
   }
@@ -75,6 +84,8 @@ h1,
 h2,
 h3 {
   margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -84,7 +95,7 @@ h1 {
 }
 
 h2 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 button,
@@ -141,16 +152,20 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  font-size: 1.15rem;
   text-decoration: none;
   color: var(--text);
 }
 
+.wordmark {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
 .logo {
-  width: 28px;
-  height: 28px;
-  color: var(--brand);
+  width: 42px;
+  height: 31px;
 }
 
 .nav {

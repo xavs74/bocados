@@ -51,7 +51,7 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href="#/today">
           <Logo />
-          <span>Bocados</span>
+          <span className="wordmark">bocados</span>
         </a>
       </header>
     <nav className="nav" aria-label="Principal">
@@ -93,16 +93,23 @@ function NavLink({ tab, current, icon, children }: { tab: Tab; current: Tab; ico
 }
 
 /** A plate with a bite taken out of it. */
+/** La ramita: an olive branch laid out wide, with one green and one black olive. */
 function Logo() {
   return (
-    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
-      <path d={LOGO_PATH} fill="currentColor" />
+    <svg className="logo" viewBox="2 18 96 70" aria-hidden="true">
+      <path d="M6 60C32 74 64 32 94 40" fill="none" stroke="var(--fat)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M0 0Q9.9-7.3 22 0Q9.9 7.3 0 0Z" fill="var(--leaf)" transform="translate(30.8 60.3) rotate(-61.2)" />
+      <path d="M0 0Q9-6.6 20 0Q9 6.6 0 0Z" fill="var(--fat)" transform="translate(44 54.5) rotate(15.4)" />
+      <path d="M0 0Q10.8-7.9 24 0Q10.8 7.9 0 0Z" fill="var(--leaf)" transform="translate(59.4 46.7) rotate(-67.8)" />
+      <path d="M0 0Q9-6.6 20 0Q9 6.6 0 0Z" fill="var(--fat)" transform="translate(74 40.9) rotate(25.8)" />
+      <path d="M0 0Q9.9-7.3 22 0Q9.9 7.3 0 0Z" fill="var(--leaf)" transform="translate(86.8 39) rotate(-40.7)" />
+      <ellipse cx="21.5" cy="72.4" rx="10" ry="13" fill="var(--fat)" transform="rotate(-5.6 21.5 72.4)" />
+      <ellipse cx="17.6" cy="68.6" rx="2.8" ry="4.3" fill="var(--bg)" opacity=".45" transform="rotate(-5.6 17.6 68.6)" />
+      <ellipse cx="57.5" cy="58.6" rx="10" ry="13" fill="var(--olive-black)" transform="rotate(-27.2 57.5 58.6)" />
+      <ellipse cx="52.2" cy="55.1" rx="2.8" ry="4.3" fill="var(--bg)" opacity=".45" transform="rotate(-27.2 52.2 55.1)" />
     </svg>
   )
 }
-
-const LOGO_PATH =
-  'M16 3a13 13 0 1 0 12.9 11.4 4 4 0 0 1-5.2-4.1 4 4 0 0 1-3.6-6.8A13 13 0 0 0 16 3z'
 
 const iconProps = {
   width: 24,
