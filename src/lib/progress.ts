@@ -1,15 +1,10 @@
-import type { Entry } from '../db'
+import type { Entry, Weight } from '../db'
 import { DAY_TOLERANCE } from './calendar'
 import { addDays } from './dates'
 import { bmr, isComplete, type Profile } from './energy'
 import { scale, sum, type Goals, type MacroKey, type Nutrients } from './nutrition'
 
-/** One weigh-in. At most one per day: weighing again replaces the day's value. */
-export interface Weight {
-  date: string
-  kg: number
-  createdAt: number
-}
+export type { Weight }
 
 /** A day counts as logged from here up. Below it, the day was abandoned rather than tiny. */
 export const LOGGED_FLOOR = 500

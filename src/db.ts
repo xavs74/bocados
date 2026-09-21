@@ -104,6 +104,16 @@ export interface Planned {
   createdAt: number
 }
 
+/**
+ * A weigh-in. The date is the key, so weighing twice in a day replaces the
+ * day's value; nothing asks anyone to weigh daily.
+ */
+export interface Weight {
+  date: string
+  kg: number
+  createdAt: number
+}
+
 export interface Setting {
   key: string
   value: unknown
@@ -127,6 +137,7 @@ export class BocadosDB extends Dexie {
   recipes!: EntityTable<Recipe, 'id'>
   planned!: EntityTable<Planned, 'id'>
   settings!: EntityTable<Setting, 'key'>
+  weights!: EntityTable<Weight, 'date'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
     super(name)
@@ -155,6 +166,8 @@ export class BocadosDB extends Dexie {
     this.version(5).stores({ recipes: '++id, name' })
     // Version 6 adds the weekly plan.
     this.version(6).stores({ planned: '++id, date' })
+    // Version 7 adds weigh-ins, one per day.
+    this.version(7).stores({ weights: 'date' })
     this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })

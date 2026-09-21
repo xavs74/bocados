@@ -1,12 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useState } from 'react'
-import { db } from '../db'
+import { useCallback, useMemo, useState } from 'react'
+import { WeightSheet } from '../components/WeightSheet'
+import { db, type Weight } from '../db'
 import { useGoalsState } from '../hooks'
 import { dayStatus } from '../lib/calendar'
 import { addDays, isoDate, shortDate, weekLabel } from '../lib/dates'
-import { kcal, num } from '../lib/format'
+import { inputNum, kcal, num } from '../lib/format'
 import { MACROS, MACRO_LABEL, goalGrams } from '../lib/nutrition'
-import { dailyTotals, periodStats, weeklyAverages } from '../lib/progress'
+import { dailyTotals, periodStats, weeklyAverages, weightTrend } from '../lib/progress'
 
 const PERIODS = [
   { weeks: 4, label: '4 semanas' },
@@ -19,6 +20,10 @@ export function Progress() {
   const today = isoDate()
   const from = addDays(today, -(weeks * 7 - 1))
   const entries = useLiveQuery(() => db.entries.where('date').between(from, today, true, true).toArray(), [from, today])
+  const weights = useLiveQuery(() => db.weights.toArray(), [])
+  const inPeriod = useMemo(() => (weights ?? []).filter((w) => w.date >= from && w.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [weights, from, today])
+  const [weighing, setWeighing] = useState<Weight | 'new' | null>(null)
+  const closeWeight = useCallback(() => setWeighing(null), [])
 
   const days = useMemo(() => dailyTotals(entries ?? []), [entries])
   const stats = periodStats(days, from, today, goals.kcal)
@@ -39,7 +44,7 @@ export function Progress() {
         ))}
       </div>
 
-      {entries === undefined ? null : stats.logged === 0 ? (
+      {entries === undefined ? null : stats.logged === 0 && inPeriod.length === 0 ? (
         <section className="card pad">
           <h2 className="section-title">Aún no hay nada que mirar</h2>
           <p className="hint">
@@ -48,6 +53,7 @@ export function Progress() {
         </section>
       ) : (
         <>
+          {stats.logged > 0 && (
           <section className="card pad" aria-label="Cómo va">
             <h2 className="section-title">Cómo va</h2>
             <p className="big-number">
@@ -72,13 +78,16 @@ export function Progress() {
               <p className="hint">Con menos de la mitad de los días apuntados, la media dice poco: cuenta solo lo que has registrado.</p>
             )}
           </section>
+          )}
+
+          <WeightCard weights={inPeriod} weeks={weeks} onAdd={() => setWeighing('new')} onPick={setWeighing} />
 
           <section className="card pad" aria-label="Semana a semana">
             <h2 className="section-title">Semana a semana</h2>
             <WeekBars weeks={byWeek} goal={goalSet ? goals.kcal : 0} />
           </section>
 
-          {goalSet && (
+          {goalSet && stats.logged > 0 && (
             <section className="card pad" aria-label="Macros">
               <h2 className="section-title">Macros de media</h2>
               <ul className="macro-list">
@@ -104,9 +113,89 @@ export function Progress() {
           )}
         </>
       )}
+      {weighing && <WeightSheet {...(weighing === 'new' ? {} : { date: weighing.date, kg: weighing.kg })} onClose={closeWeight} />}
     </div>
   )
 }
+
+/**
+ * Weigh-ins over the period with the line through them. The line is the point:
+ * weight swings about a kilo with water and salt, so single readings mislead.
+ */
+function WeightCard({ weights, weeks, onAdd, onPick }: { weights: Weight[]; weeks: number; onAdd: () => void; onPick: (w: Weight) => void }) {
+  const trend = weightTrend(weights)
+  const last = weights[weights.length - 1]
+  return (
+    <section className="card pad" aria-label="Peso">
+      <div className="card-head">
+        <h2 className="section-title">Peso</h2>
+        <button className="btn ghost small" onClick={onAdd}>
+          Apuntar mi peso
+        </button>
+      </div>
+      {weights.length === 0 ? (
+        <p className="hint">
+          Apúntate el peso una o dos veces por semana y aquí verás hacia dónde va. Más adelante servirá para ajustar tu objetivo con tus propios datos.
+        </p>
+      ) : (
+        <>
+          <p className="big-number">
+            <strong>{inputNum(last.kg)}</strong> kg
+            {trend && (
+              <span className="muted">
+                {' '}
+                · {trend.kgPerWeek === 0 ? 'estable' : `${trend.kgPerWeek < 0 ? 'bajando' : 'subiendo'} ${inputNum(Math.abs(trend.kgPerWeek))} kg por semana`}
+              </span>
+            )}
+          </p>
+          <WeightChart weights={weights} onPick={onPick} />
+          <p className="hint">
+            {weights.length === 1
+              ? 'Con un solo peso no hay tendencia todavía. Apunta otro en unos días.'
+              : `${weights.length} pesos en ${weeks} semanas. La línea es la tendencia; los puntos suben y bajan con el agua y la sal.`}
+          </p>
+        </>
+      )}
+    </section>
+  )
+}
+
+const CHART = { w: 320, h: 120, pad: 10 }
+
+function WeightChart({ weights, onPick }: { weights: Weight[]; onPick: (w: Weight) => void }) {
+  const trend = weightTrend(weights)
+  const kgs = weights.map((w) => w.kg)
+  const lowest = Math.min(...kgs, trend ? Math.min(trend.from, trend.to) : Infinity)
+  const highest = Math.max(...kgs, trend ? Math.max(trend.from, trend.to) : -Infinity)
+  // A flat month should look flat, not like a mountain range, so the scale has a floor of 2 kg.
+  const span = Math.max(highest - lowest, 2)
+  const mid = (highest + lowest) / 2
+  const top = mid + span / 2
+  const first = Date.parse(`${weights[0].date}T00:00:00`)
+  const days = Math.max(1, (Date.parse(`${weights[weights.length - 1].date}T00:00:00`) - first) / 86400000)
+  const x = (date: string) => CHART.pad + ((Date.parse(`${date}T00:00:00`) - first) / 86400000 / days) * (CHART.w - CHART.pad * 2)
+  const y = (kg: number) => CHART.pad + ((top - kg) / span) * (CHART.h - CHART.pad * 2)
+
+  return (
+    <div className="weight-chart">
+      <svg viewBox={`0 0 ${CHART.w} ${CHART.h}`} role="img" aria-label={`Peso de ${inputNum(weights[0].kg)} a ${inputNum(weights[weights.length - 1].kg)} kilos`}>
+        <polyline className="weight-line" points={weights.map((w) => `${x(w.date)},${y(w.kg)}`).join(' ')} />
+        {trend && <line className="weight-trend" x1={x(weights[0].date)} y1={y(trend.from)} x2={x(weights[weights.length - 1].date)} y2={y(trend.to)} />}
+        {weights.map((w) => (
+          <circle key={w.date} className="weight-dot" cx={x(w.date)} cy={y(w.kg)} r="4" onClick={() => onPick(w)}>
+            <title>{`${shortDate(w.date)}: ${inputNum(w.kg)} kg`}</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="weight-scale muted">
+        <span>{inputNum(round1(top))} kg</span>
+        <span>{inputNum(round1(top - span))} kg</span>
+      </div>
+    </div>
+  )
+}
+
+const round1 = (n: number) => Math.round(n * 10) / 10
 
 /** One bar per week: how its average compares with the goal. */
 function WeekBars({ weeks, goal }: { weeks: { start: string; meanKcal: number; logged: number }[]; goal: number }) {

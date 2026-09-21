@@ -345,6 +345,63 @@ a {
   white-space: nowrap;
 }
 
+/* Weight: the dots are the weigh-ins, the straight line is the trend. */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-head .section-title {
+  margin: 0;
+}
+
+.weight-chart {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.weight-chart svg {
+  flex: 1;
+  min-width: 0;
+  height: 120px;
+  overflow: visible;
+}
+
+.weight-line {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.weight-trend {
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.weight-dot {
+  fill: var(--surface);
+  stroke: var(--brand);
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.weight-scale {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: none;
+  padding: 4px 0;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 /* One bar per week, with a line where the goal sits. */
 .week-bars {
   list-style: none;
