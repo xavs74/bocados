@@ -4,6 +4,7 @@ import { addDays } from './dates'
 import type { Goals } from './nutrition'
 import {
   FLOOR,
+  applySuggestion,
   dailyTotals,
   maintenanceEstimate,
   periodStats,
@@ -211,5 +212,31 @@ describe('suggestGoal', () => {
     const s = periodStats(days, '2026-09-01', '2026-09-21', 2200)
     expect(s.logged).toBe(21)
     expect(suggestGoal({ goals: goals(), stats: s, trend: weightTrend(threeWeeks), adjustment: -500 }).kind).toBe('suggestion')
+  })
+})
+
+describe('applySuggestion', () => {
+  it('keeps a calculated goal on the number that was offered', () => {
+    const next = applySuggestion(goals(), 1760, -500)
+    expect(next.kcal).toBe(1760)
+    // Objetivos rebuilds a calculated goal from burn + adjustment: 2260 − 500.
+    expect(next.measuredTdee! + next.profile!.adjustment!).toBe(1760)
+  })
+
+  it('takes the latest weigh-in as the profile weight', () => {
+    expect(applySuggestion(goals(), 1760, -500, 77.4).profile!.weightKg).toBe(77.4)
+    expect(applySuggestion(goals(), 1760, -500).profile!.weightKg).toBe(80)
+  })
+
+  it('recounts protein per kilo against the new goal', () => {
+    const next = applySuggestion(goals({ proteinPerKg: 2 }), 1760, -500, 77.4)
+    // 77.4 kg × 2 g = 154.8 g = 619 kcal, about 35 % of 1760.
+    expect(next.split.protein).toBe(35)
+    expect(next.split.carbs + next.split.protein + next.split.fat).toBe(100)
+  })
+
+  it('leaves a goal set by hand with its own split', () => {
+    const manual = goals({ mode: 'manual', proteinPerKg: undefined })
+    expect(applySuggestion(manual, 2000, 0).split).toEqual(manual.split)
   })
 })

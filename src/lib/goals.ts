@@ -1,4 +1,5 @@
 import { DEFAULT_GOALS } from '../db'
+import { isComplete, tdee } from './energy'
 import type { Goals } from './nutrition'
 
 /**
@@ -17,4 +18,13 @@ export function goalsAreSet(goals: Goals | undefined): boolean {
     goals.split.protein !== d.split.protein ||
     goals.split.fat !== d.split.fat
   )
+}
+
+/**
+ * What this person burns in a day: measured from their own weeks when that has
+ * been worked out, otherwise the formula's estimate. Null without a profile.
+ */
+export function burnOf(goals: Goals): number | null {
+  if (goals.measuredTdee) return goals.measuredTdee
+  return goals.mode === 'calculated' && isComplete(goals.profile) ? Math.round(tdee(goals.profile)) : null
 }

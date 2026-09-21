@@ -2,12 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useMemo, useState } from 'react'
 import { WeightSheet } from '../components/WeightSheet'
 import { db, type Weight } from '../db'
+import { saveGoals } from '../hooks'
 import { useGoalsState } from '../hooks'
 import { dayStatus } from '../lib/calendar'
 import { addDays, isoDate, shortDate, weekLabel } from '../lib/dates'
+import type { Goals } from '../lib/nutrition'
 import { inputNum, kcal, num } from '../lib/format'
 import { MACROS, MACRO_LABEL, goalGrams } from '../lib/nutrition'
-import { dailyTotals, periodStats, weeklyAverages, weightTrend } from '../lib/progress'
+import { NEEDS, applySuggestion, dailyTotals, periodStats, suggestGoal, weeklyAverages, weightTrend, type Suggestion } from '../lib/progress'
 
 const PERIODS = [
   { weeks: 4, label: '4 semanas' },
@@ -24,11 +26,20 @@ export function Progress() {
   const inPeriod = useMemo(() => (weights ?? []).filter((w) => w.date >= from && w.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [weights, from, today])
   const [weighing, setWeighing] = useState<Weight | 'new' | null>(null)
   const closeWeight = useCallback(() => setWeighing(null), [])
+  const snoozed = useLiveQuery(() => db.settings.get('goalSuggestionSnoozedUntil').then((r) => (r?.value as string | undefined) ?? ''), [])
 
   const days = useMemo(() => dailyTotals(entries ?? []), [entries])
   const stats = periodStats(days, from, today, goals.kcal)
   const byWeek = weeklyAverages(days, from, weeks)
   const targets = goalGrams(goals)
+
+  // The suggestion looks at three fixed weeks, whichever period is on screen.
+  const checkFrom = addDays(today, -(NEEDS.checkDays - 1))
+  const checkStats = periodStats(days, checkFrom, today, goals.kcal)
+  const checkTrend = weightTrend((weights ?? []).filter((w) => w.date >= checkFrom && w.date <= today))
+  const adjustment = goals.profile?.adjustment ?? 0
+  const suggestion = suggestGoal({ goals, stats: checkStats, trend: checkTrend, adjustment })
+  const showSuggestion = goalSet && suggestion.kind === 'suggestion' && (!snoozed || snoozed <= today)
 
   return (
     <div className="progress">
@@ -80,6 +91,10 @@ export function Progress() {
           </section>
           )}
 
+          {showSuggestion && suggestion.kind === 'suggestion' && (
+            <SuggestionCard suggestion={suggestion} goals={goals} adjustment={adjustment} lastWeight={(weights ?? []).at(-1)?.kg} />
+          )}
+
           <WeightCard weights={inPeriod} weeks={weeks} onAdd={() => setWeighing('new')} onPick={setWeighing} />
 
           <section className="card pad" aria-label="Semana a semana">
@@ -115,6 +130,42 @@ export function Progress() {
       )}
       {weighing && <WeightSheet {...(weighing === 'new' ? {} : { date: weighing.date, kg: weighing.kg })} onClose={closeWeight} />}
     </div>
+  )
+}
+
+/**
+ * What the person's own weeks say their goal should be. It explains itself and
+ * changes nothing on its own: accepting is a tap, and so is putting it off.
+ */
+function SuggestionCard({ suggestion, goals, adjustment, lastWeight }: { suggestion: Extract<Suggestion, { kind: 'suggestion' }>; goals: Goals; adjustment: number; lastWeight?: number }) {
+  const { kcal: offered, maintenance, meanKcal, kgPerWeek, days, clamped } = suggestion
+  const lower = offered < goals.kcal
+  const movement = kgPerWeek === 0 ? 'tu peso no se ha movido' : `has ${kgPerWeek < 0 ? 'bajado' : 'subido'} ${inputNum(Math.abs(kgPerWeek * (days / 7)))} kg`
+  const wanted = adjustment < 0 ? 'perder peso' : adjustment > 0 ? 'ganar peso' : 'mantener el peso'
+
+  async function accept() {
+    await saveGoals(applySuggestion(goals, offered, adjustment, lastWeight))
+    await db.settings.put({ key: 'goalSuggestionSnoozedUntil', value: addDays(isoDate(), NEEDS.snoozeDays) })
+  }
+
+  return (
+    <section className="card pad suggestion" aria-label="Ajustar el objetivo">
+      <h2 className="section-title">Tu objetivo parece {lower ? 'alto' : 'bajo'}</h2>
+      <p>
+        En estas {Math.round(days / 7)} semanas has comido <strong>{kcal(meanKcal)} kcal</strong> de media al día y {movement}. Con eso, gastas unas{' '}
+        <strong>{kcal(maintenance)} kcal</strong> al día
+        {goals.measuredTdee ? '' : ', no las que dice la fórmula'}. Para {wanted} al ritmo que elegiste, tu objetivo sería <strong>{kcal(offered)} kcal</strong>.
+      </p>
+      {clamped && <p className="hint">Vamos poco a poco: este cambio es todo lo que conviene mover de una vez. Dentro de dos semanas volvemos a mirar.</p>}
+      <div className="footer-row">
+        <button className="btn ghost" onClick={() => db.settings.put({ key: 'goalSuggestionSnoozedUntil', value: addDays(isoDate(), NEEDS.snoozeDays) })}>
+          Ahora no
+        </button>
+        <button className="btn primary grow" onClick={accept}>
+          Usar {kcal(offered)} kcal
+        </button>
+      </div>
+    </section>
   )
 }
 

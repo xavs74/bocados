@@ -108,7 +108,8 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
     next = { ...next, mode: next.mode ?? mode }
     const calculated = next.mode === 'calculated' && isComplete(next.profile)
     // In calculated mode the target follows the profile whenever it's complete.
-    if (calculated) next = { ...next, kcal: targetKcal(next.profile as Profile) }
+    // With a burn measured from their own data, that replaces the formula's estimate.
+    if (calculated) next = { ...next, kcal: next.measuredTdee ? Math.round(next.measuredTdee + (next.profile as Profile).adjustment) : targetKcal(next.profile as Profile) }
     // New people get protein by weight as soon as their data is complete.
     if (calculated && next.proteinPerKg === undefined && isNew)
       next = { ...next, proteinPerKg: defaultProteinPerKg((next.profile as Profile).adjustment) }
@@ -167,7 +168,17 @@ function GoalsForm({ initial }: { initial: GoalsT }) {
             </div>
           </label>
         ) : (
-          <Calculator profile={goals.profile ?? {}} onChange={(profile) => update({ ...goals, profile })} />
+          <>
+            <Calculator profile={goals.profile ?? {}} onChange={(profile) => update({ ...goals, profile })} measured={goals.measuredTdee} />
+            {goals.measuredTdee && (
+              <p className="hint measured">
+                Tu gasto viene de tus propias semanas en Progreso, no de la fórmula.{' '}
+                <button className="link-btn" onClick={() => update({ ...goals, measuredTdee: undefined })}>
+                  Volver a la fórmula
+                </button>
+              </p>
+            )}
+          </>
         )}
       </section>
 
@@ -280,7 +291,7 @@ const NUM_FIELDS = [
   ['weightKg', 'Peso (kg)'],
 ] as const
 
-function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void }) {
+function Calculator({ profile, onChange, measured }: { profile: Partial<Profile>; onChange: (p: Partial<Profile>) => void; measured?: number }) {
   const [texts, setTexts] = useState(() =>
     Object.fromEntries(NUM_FIELDS.map(([k]) => [k, profile[k] === undefined ? '' : inputNum(profile[k])])),
   )
@@ -368,7 +379,7 @@ function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange
       </label>
 
       {complete ? (
-        <Breakdown profile={p} />
+        <Breakdown profile={p} measured={measured} />
       ) : (
         <p className="hint result-empty">Completa sexo, edad, altura, peso y actividad para calcular tus calorías.</p>
       )}
@@ -376,10 +387,10 @@ function Calculator({ profile, onChange }: { profile: Partial<Profile>; onChange
   )
 }
 
-function Breakdown({ profile }: { profile: Profile }) {
+function Breakdown({ profile, measured }: { profile: Profile; measured?: number }) {
   const basal = bmr(profile)
-  const burn = tdee(profile)
-  const target = targetKcal(profile)
+  const burn = measured ?? tdee(profile)
+  const target = Math.round(burn + profile.adjustment)
   return (
     <div className="breakdown" aria-live="polite">
       <div className="breakdown-row">
@@ -387,7 +398,7 @@ function Breakdown({ profile }: { profile: Profile }) {
         <strong>{kcal(basal)} kcal</strong>
       </div>
       <div className="breakdown-row">
-        <span>Gasto diario (× {activityFactor(profile).toLocaleString(LOCALE)} por actividad)</span>
+        <span>{measured ? 'Gasto diario (medido con tus datos)' : `Gasto diario (× ${activityFactor(profile).toLocaleString(LOCALE)} por actividad)`}</span>
         <strong>{kcal(burn)} kcal</strong>
       </div>
       <div className="breakdown-row">

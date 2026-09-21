@@ -345,6 +345,23 @@ a {
   white-space: nowrap;
 }
 
+.suggestion {
+  border: 1px solid var(--brand);
+}
+
+.suggestion p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.suggestion .hint {
+  margin-bottom: 12px;
+}
+
+.measured .link-btn {
+  padding: 0;
+}
+
 /* Weight: the dots are the weigh-ins, the straight line is the trend. */
 .card-head {
   display: flex;

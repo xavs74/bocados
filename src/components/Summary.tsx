@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { wellOver } from '../lib/calendar'
-import { isComplete, tdee } from '../lib/energy'
+import { burnOf } from '../lib/goals'
 import { kcal, num, pct } from '../lib/format'
 import {
   MACROS,
@@ -129,7 +129,7 @@ function FullSummary({ totals, goals, isPast, plannedKcal = 0, onClose }: Props 
   const split = calorieSplit(totals)
   const targets = goalGrams(goals)
   const hasFood = totals.carbs + totals.protein + totals.fat > 0
-  const burn = goals.mode === 'calculated' && isComplete(goals.profile) ? tdee(goals.profile) : null
+  const burn = burnOf(goals)
 
   return (
     <section className="card summary" aria-label="Resumen del día">

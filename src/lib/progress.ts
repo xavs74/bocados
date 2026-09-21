@@ -3,6 +3,7 @@ import { DAY_TOLERANCE } from './calendar'
 import { addDays } from './dates'
 import { bmr, isComplete, type Profile } from './energy'
 import { scale, sum, type Goals, type MacroKey, type Nutrients } from './nutrition'
+import { referenceWeight, splitFromProtein } from './protein'
 
 export type { Weight }
 
@@ -133,6 +134,10 @@ export function maintenanceEstimate(meanKcal: number, slopeKgPerDay: number): nu
 /** Enough data for a suggestion to mean anything. */
 export const NEEDS = {
   days: 14,
+  /** The window the suggestion looks at. */
+  checkDays: 21,
+  /** How long a suggestion stays away once accepted or put off. */
+  snoozeDays: 14,
   loggedDays: 10,
   weighIns: 4,
   /** Days between the first and last weigh-in. */
@@ -213,4 +218,17 @@ function daysBetween(from: string, to: string): number {
 function round(n: number, places: number): number {
   const f = 10 ** places
   return Math.round(n * f) / f
+}
+
+/**
+ * The goals after accepting a suggestion. The burn is stored as the goal minus
+ * the deficit or surplus, so a goal built from the profile keeps matching the
+ * number that was offered, even when a guardrail moved it. The latest weigh-in
+ * becomes the profile's weight, which is what protein per kilo is counted on.
+ */
+export function applySuggestion(goals: Goals, kcal: number, adjustment: number, weightKg?: number): Goals {
+  const profile = goals.profile ? { ...goals.profile, ...(weightKg ? { weightKg } : {}) } : goals.profile
+  const next: Goals = { ...goals, kcal, measuredTdee: kcal - adjustment, profile, set: true }
+  if (!next.proteinPerKg || !isComplete(next.profile)) return next
+  return { ...next, split: splitFromProtein(kcal, referenceWeight(next.profile).kg, next.proteinPerKg).split }
 }

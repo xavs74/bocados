@@ -38,6 +38,11 @@ export interface Goals {
   proteinPerKg?: number
   /** The person set g/kg themselves, so changing the goal leaves it alone. */
   proteinCustom?: boolean
+  /**
+   * Daily burn measured from weeks of logging and weigh-ins, which beats the
+   * formula's estimate. When set, a calculated goal is built on this.
+   */
+  measuredTdee?: number
 }
 
 export const ZERO: Nutrients = { kcal: 0, carbs: 0, protein: 0, fat: 0 }
