@@ -1736,10 +1736,29 @@ input[type='range'] {
   gap: 16px;
 }
 
+/*
+ * Labels and boxes line up across the three columns even when one label wraps
+ * to two lines, which "Edad (años)" does on narrow phones and at larger text
+ * sizes.
+ */
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
   gap: 10px;
+}
+
+.grid-3 > .field {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  gap: 6px;
+}
+
+@supports not (grid-template-rows: subgrid) {
+  .grid-3 {
+    align-items: end;
+  }
 }
 
 .grid-3 input:not([type='range']) {

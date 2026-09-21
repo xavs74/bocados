@@ -57,16 +57,16 @@ export function Progress() {
 
       {entries === undefined ? (
         <p className="empty">Cargando…</p>
-      ) : stats.logged === 0 && inPeriod.length === 0 ? (
-        <section className="card pad">
-          <h2 className="section-title">Aún no hay nada que mirar</h2>
-          <p className="hint">
-            Apunta lo que comes unos días y aquí verás tu media diaria, cuántos días te quedas cerca de tu objetivo y cómo van tus macros.
-          </p>
-        </section>
       ) : (
         <>
-          {stats.logged > 0 && (
+          {stats.logged === 0 ? (
+            <section className="card pad">
+              <h2 className="section-title">Aún no hay nada que mirar</h2>
+              <p className="hint">
+                Apunta lo que comes unos días y aquí verás tu media diaria, cuántos días te quedas cerca de tu objetivo y cómo van tus macros.
+              </p>
+            </section>
+          ) : (
           <section className="card pad" aria-label="Cómo va">
             <h2 className="section-title">Cómo va</h2>
             <p className="big-number">
@@ -99,10 +99,12 @@ export function Progress() {
 
           <WeightCard weights={inPeriod} weeks={weeks} onAdd={() => setWeighing('new')} onPick={setWeighing} />
 
-          <section className="card pad" aria-label="Semana a semana">
-            <h2 className="section-title">Semana a semana</h2>
-            <WeekBars weeks={byWeek} goal={goalSet ? goals.kcal : 0} />
-          </section>
+          {stats.logged > 0 && (
+            <section className="card pad" aria-label="Semana a semana">
+              <h2 className="section-title">Semana a semana</h2>
+              <WeekBars weeks={byWeek} goal={goalSet ? goals.kcal : 0} />
+            </section>
+          )}
 
           {goalSet && stats.logged > 0 && (
             <section className="card pad" aria-label="Macros">
