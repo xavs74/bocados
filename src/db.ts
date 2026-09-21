@@ -178,6 +178,44 @@ export class BocadosDB extends Dexie {
 
 export const db = new BocadosDB('bocados', { seed: true })
 
+/**
+ * Why the screens have no data. Everything is read through live queries, and a
+ * database that never opens leaves them waiting for ever, which looks like an
+ * empty app; this says what happened instead.
+ *
+ * 'blocked' is the one that bites on phones: another window or tab still has an
+ * older version of the database open, so the upgrade can't run.
+ */
+export type DbStatus = 'opening' | 'open' | 'blocked' | 'failed'
+
+let dbStatus: DbStatus = 'opening'
+export let dbError = ''
+const watchers = new Set<(s: DbStatus) => void>()
+
+export const getDbStatus = () => dbStatus
+
+export function watchDbStatus(fn: (s: DbStatus) => void): () => void {
+  watchers.add(fn)
+  return () => void watchers.delete(fn)
+}
+
+function setDbStatus(status: DbStatus, error = '') {
+  dbStatus = status
+  dbError = error
+  for (const fn of watchers) fn(status)
+}
+
+// Another window wants to upgrade: let go of the database so it can.
+db.on('versionchange', () => {
+  db.close()
+  setDbStatus('blocked')
+})
+db.on('blocked', () => setDbStatus('blocked'))
+db.open().then(
+  () => setDbStatus('open'),
+  (e: Error) => setDbStatus('failed', e.message),
+)
+
 /** The app was called Bocado before; its data lived in a database of that name. */
 const LEGACY_DB = 'bocado'
 const LEGACY_IMPORTED = 'legacyImported'

@@ -262,6 +262,26 @@ a {
   }
 }
 
+/* Shown in place of the screens when the database will not open. */
+.db-banner {
+  grid-area: main;
+  align-self: start;
+  justify-self: center;
+  z-index: 20;
+  width: min(560px, calc(100% - 32px));
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--text);
+}
+
+.db-banner p {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+}
+
 /* Alimentos opens from Objetivos, so it carries its own way back. */
 .back-link {
   display: inline-flex;

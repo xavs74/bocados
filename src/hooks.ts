@@ -1,8 +1,14 @@
 import { goalsAreSet } from './lib/goals'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { DEFAULT_GOALS, db, type Meal } from './db'
+import { useSyncExternalStore } from 'react'
+import { DEFAULT_GOALS, db, getDbStatus, watchDbStatus, type DbStatus, type Meal } from './db'
 import { normalizeMeals } from './lib/meals'
 import type { Goals } from './lib/nutrition'
+
+/** Whether the database opened, so a stuck app can say so instead of looking empty. */
+export function useDbStatus(): DbStatus {
+  return useSyncExternalStore(watchDbStatus, getDbStatus, () => 'open' as DbStatus)
+}
 
 export function useGoals(): Goals {
   const row = useLiveQuery(() => db.settings.get('goals'))

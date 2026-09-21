@@ -28,6 +28,9 @@ export function Goals() {
   const row = useLiveQuery(() => db.settings.get('goals').then((r) => r ?? null))
   // Bumped after an import so the form starts again from the imported goals.
   const [generation, setGeneration] = useState(0)
+  // Read straight after an import: the live query may not have caught up yet,
+  // and a form showing the old values would save them back over the import.
+  const [imported, setImported] = useState<GoalsT | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -35,6 +38,7 @@ export function Goals() {
     if (!(await askConfirm('Al importar se reemplazan todos los alimentos, los días registrados y los objetivos de este dispositivo.', { title: '¿Importar la copia?', confirmLabel: 'Importar', danger: true }))) return
     try {
       const r = await importBackup(file)
+      setImported(((await db.settings.get('goals'))?.value as GoalsT | undefined) ?? DEFAULT_GOALS)
       setGeneration((g) => g + 1)
       setMessage(`Importados ${r.foods} alimentos y ${r.entries} registros.`)
     } catch (e) {
@@ -49,7 +53,7 @@ export function Goals() {
         <span className="muted small-text">Los cambios se guardan solos</span>
       </div>
 
-      {row !== undefined && <GoalsForm key={generation} initial={(row?.value as GoalsT | undefined) ?? DEFAULT_GOALS} />}
+      {row !== undefined && <GoalsForm key={generation} initial={imported ?? (row?.value as GoalsT | undefined) ?? DEFAULT_GOALS} />}
 
       <MealsCard />
 

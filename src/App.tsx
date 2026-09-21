@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Onboarding } from './components/Onboarding'
-import { db } from './db'
-import { useGoalsState } from './hooks'
+import { db, dbError } from './db'
+import { useDbStatus, useGoalsState } from './hooks'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
@@ -80,6 +80,7 @@ export default function App() {
         </NavLink>
       </nav>
       {/* Only this area scrolls, so the header and tab bar never move with the page. */}
+      <DbBanner />
       <main className="main" ref={mainRef}>
         <div className="main-inner" ref={innerRef} onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('enter-from-left', 'enter-from-right')}>
           {screen === 'today' && <Today />}
@@ -91,6 +92,29 @@ export default function App() {
       </main>
       <ConfirmHost />
       {showSetup && <Onboarding onDone={() => setSetupDone(true)} />}
+    </div>
+  )
+}
+
+/**
+ * Shown when the database won't open. Without it the screens simply stay empty
+ * for ever, with nothing to explain why or to do about it.
+ */
+function DbBanner() {
+  const status = useDbStatus()
+  if (status === 'open' || status === 'opening') return null
+  return (
+    <div className="db-banner" role="alert">
+      <p>
+        <strong>Bocados no puede abrir tus datos.</strong>{' '}
+        {status === 'blocked'
+          ? 'Tienes la app abierta en otra ventana o pestaña con otra versión. Ciérralas todas y vuelve a abrirla.'
+          : `No se ha podido abrir la base de datos de este dispositivo. ${dbError}`}
+      </p>
+      <p className="hint">Tus datos siguen guardados en el dispositivo; solo hace falta volver a abrir la app.</p>
+      <button className="btn primary small" onClick={() => location.reload()}>
+        Volver a intentarlo
+      </button>
     </div>
   )
 }

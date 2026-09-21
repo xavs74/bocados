@@ -55,7 +55,9 @@ export function Progress() {
         ))}
       </div>
 
-      {entries === undefined ? null : stats.logged === 0 && inPeriod.length === 0 ? (
+      {entries === undefined ? (
+        <p className="empty">Cargando…</p>
+      ) : stats.logged === 0 && inPeriod.length === 0 ? (
         <section className="card pad">
           <h2 className="section-title">Aún no hay nada que mirar</h2>
           <p className="hint">
