@@ -54,6 +54,14 @@ export function Goals() {
       <MealsCard />
 
       <section className="card pad">
+        <h2 className="section-title">Alimentos y recetas</h2>
+        <p className="hint">Tu lista de alimentos, los productos que escaneas y tus recetas.</p>
+        <a className="btn ghost block" href="#/foods">
+          <FoodsIcon /> Abrir alimentos
+        </a>
+      </section>
+
+      <section className="card pad">
         <h2 className="section-title">Tus datos</h2>
         <p className="hint">
           Todo se guarda solo en este dispositivo. Exporta una copia para no perder nada o para pasarla a otro móvil u ordenador, y después impórtala allí.
@@ -395,5 +403,14 @@ function Breakdown({ profile }: { profile: Profile }) {
       </div>
       {target < basal && <p className="hint warn">Este objetivo queda por debajo de tu metabolismo basal. Mejor no bajar de ahí sin consultar a un profesional.</p>}
     </div>
+  )
+}
+
+/** Lines of a list, as in the old Alimentos tab. */
+function FoodsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M4 6h16M4 12h16M4 18h10" />
+    </svg>
   )
 }

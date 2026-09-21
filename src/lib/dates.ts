@@ -32,6 +32,11 @@ export function fullDate(iso: string): string {
 }
 
 /** Monday of the week `iso` falls in. */
+/** "25 sept", for labels with no room for more. */
+export function shortDate(iso: string): string {
+  return parseIso(iso).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' }).replace('.', '')
+}
+
 export function startOfWeek(iso: string): string {
   const d = parseIso(iso)
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7))

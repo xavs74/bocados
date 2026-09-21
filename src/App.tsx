@@ -5,21 +5,32 @@ import { useGoalsState } from './hooks'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
+import { Progress } from './screens/Progress'
 import { Plan } from './screens/Plan'
 import { Goals } from './screens/Goals'
 import { Today } from './screens/Today'
 import { ConfirmHost } from './components/ConfirmHost'
 
-const TABS = ['today', 'plan', 'foods', 'goals'] as const
+/** The tabs in the bar, in the order swiping moves through them. */
+const TABS = ['today', 'plan', 'progress', 'goals'] as const
 type Tab = (typeof TABS)[number]
+/** Alimentos lives inside Objetivos now, but keeps its own address. */
+type Screen = Tab | 'foods'
+
+function screenFromHash(): Screen {
+  const t = location.hash.replace('#/', '') as Screen
+  return t === 'foods' || TABS.includes(t as Tab) ? t : 'today'
+}
 
 function tabFromHash(): Tab {
-  const t = location.hash.replace('#/', '') as Tab
-  return TABS.includes(t) ? t : 'today'
+  const s = screenFromHash()
+  // Alimentos is reached from Objetivos, so that tab stays the current one.
+  return s === 'foods' ? 'goals' : s
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>(tabFromHash)
+  const [screen, setScreen] = useState<Screen>(screenFromHash)
+  const tab = screen === 'foods' ? 'goals' : screen
   const mainRef = useRef<HTMLElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
 
@@ -32,14 +43,14 @@ export default function App() {
   useSwipeTabs(mainRef, innerRef, swipe)
 
   useEffect(() => {
-    const onHash = () => setTab(tabFromHash())
+    const onHash = () => setScreen(screenFromHash())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
   useEffect(() => {
     mainRef.current?.scrollTo(0, 0)
-  }, [tab])
+  }, [screen])
 
   const { set: goalsSet, loaded } = useGoalsState()
   const skipped = useLiveQuery(() => db.settings.get('onboardingSkipped').then((r) => !!r?.value))
@@ -61,8 +72,8 @@ export default function App() {
         <NavLink tab="plan" current={tab} icon={<PlanIcon />}>
           Plan
         </NavLink>
-        <NavLink tab="foods" current={tab} icon={<FoodsIcon />}>
-          Alimentos
+        <NavLink tab="progress" current={tab} icon={<ProgressIcon />}>
+          Progreso
         </NavLink>
         <NavLink tab="goals" current={tab} icon={<GoalsIcon />}>
           Objetivos
@@ -71,10 +82,11 @@ export default function App() {
       {/* Only this area scrolls, so the header and tab bar never move with the page. */}
       <main className="main" ref={mainRef}>
         <div className="main-inner" ref={innerRef} onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('enter-from-left', 'enter-from-right')}>
-          {tab === 'today' && <Today />}
-          {tab === 'plan' && <Plan />}
-          {tab === 'foods' && <Foods />}
-          {tab === 'goals' && <Goals />}
+          {screen === 'today' && <Today />}
+          {screen === 'plan' && <Plan />}
+          {screen === 'progress' && <Progress />}
+          {screen === 'foods' && <Foods />}
+          {screen === 'goals' && <Goals />}
         </div>
       </main>
       <ConfirmHost />
@@ -123,6 +135,15 @@ const iconProps = {
   'aria-hidden': true,
 } as const
 
+/** Bars rising to the right. */
+function ProgressIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M4 20V11M10 20V4M16 20v-6M21 20H3" />
+    </svg>
+  )
+}
+
 function TodayIcon() {
   return (
     <svg {...iconProps}>
@@ -137,14 +158,6 @@ function PlanIcon() {
     <svg {...iconProps}>
       <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
       <path d="M3.5 10h17M8 3v4M16 3v4M8.5 14h3M8.5 17.2h7" />
-    </svg>
-  )
-}
-
-function FoodsIcon() {
-  return (
-    <svg {...iconProps}>
-      <path d="M4 6h16M4 12h16M4 18h10" />
     </svg>
   )
 }

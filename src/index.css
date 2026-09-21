@@ -262,6 +262,169 @@ a {
   }
 }
 
+/* Alimentos opens from Objetivos, so it carries its own way back. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 4px 2px;
+  color: var(--brand);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.period-switch {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.period-switch button {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.period-switch button.selected {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  max-width: 640px;
+}
+
+.progress .page-head {
+  margin-bottom: 0;
+}
+
+.big-number {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.big-number strong {
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.progress-facts {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.progress-facts li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.progress-facts strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* One bar per week, with a line where the goal sits. */
+.week-bars {
+  list-style: none;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.week-bars.dense {
+  gap: 3px;
+}
+
+.week-bars.dense .week-bar-track {
+  height: 90px;
+  border-radius: 6px;
+}
+
+.week-bars.dense .week-bar-label {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.week-bars li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.week-bar-value {
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-bar-track {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 110px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.week-bar-fill {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--good);
+  transition: height 0.4s ease;
+}
+
+.week-bar-fill.status-high,
+.week-bar-fill.status-low {
+  background: var(--warn);
+}
+
+.week-bar-fill.status-empty {
+  background: var(--border);
+}
+
+.week-bar-goal {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed var(--bg);
+  opacity: 0.85;
+}
+
+.week-bar-label,
+.week-bar-days {
+  font-size: 0.7rem;
+}
+
 .page-head {
   display: flex;
   align-items: center;
@@ -2336,6 +2499,22 @@ kbd {
   /* Objetivos: calories and macros side by side. */
   .goals {
     max-width: 1180px;
+  }
+
+  .progress {
+    max-width: 1180px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .progress .page-head,
+  .progress .period-switch {
+    grid-column: 1 / -1;
+  }
+
+  .progress .period-switch {
+    justify-self: start;
+    min-width: 300px;
   }
 
   .goals-grid {
