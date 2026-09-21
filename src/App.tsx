@@ -5,6 +5,7 @@ import { useDbStatus, useGoalsState } from './hooks'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
+import { Account } from './screens/Account'
 import { Progress } from './screens/Progress'
 import { Plan } from './screens/Plan'
 import { Goals } from './screens/Goals'
@@ -14,23 +15,25 @@ import { ConfirmHost } from './components/ConfirmHost'
 /** The tabs in the bar, in the order swiping moves through them. */
 const TABS = ['today', 'plan', 'progress', 'goals'] as const
 type Tab = (typeof TABS)[number]
-/** Alimentos lives inside Objetivos now, but keeps its own address. */
-type Screen = Tab | 'foods'
+/** Screens reached from Objetivos rather than the tab bar, with their own address. */
+const INSIDE_GOALS = ['foods', 'cuenta'] as const
+type Screen = Tab | (typeof INSIDE_GOALS)[number]
 
 function screenFromHash(): Screen {
-  const t = location.hash.replace('#/', '') as Screen
-  return t === 'foods' || TABS.includes(t as Tab) ? t : 'today'
+  // The address can carry a query, as it does coming back from signing in.
+  const t = location.hash.replace('#/', '').split('?')[0] as Screen
+  return INSIDE_GOALS.includes(t as 'foods') || TABS.includes(t as Tab) ? t : 'today'
 }
 
 function tabFromHash(): Tab {
   const s = screenFromHash()
-  // Alimentos is reached from Objetivos, so that tab stays the current one.
-  return s === 'foods' ? 'goals' : s
+  // Those screens are reached from Objetivos, so that tab stays the current one.
+  return INSIDE_GOALS.includes(s as 'foods') ? 'goals' : (s as Tab)
 }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(screenFromHash)
-  const tab = screen === 'foods' ? 'goals' : screen
+  const tab = tabFromHash()
   const mainRef = useRef<HTMLElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
 
@@ -87,6 +90,7 @@ export default function App() {
           {screen === 'plan' && <Plan />}
           {screen === 'progress' && <Progress />}
           {screen === 'foods' && <Foods />}
+          {screen === 'cuenta' && <Account />}
           {screen === 'goals' && <Goals />}
         </div>
       </main>

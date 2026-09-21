@@ -58,6 +58,14 @@ export function Goals() {
       <MealsCard />
 
       <section className="card pad">
+        <h2 className="section-title">Cuenta</h2>
+        <p className="hint">Una prueba para ver si entrar con Google funciona bien desde el móvil. Tus datos siguen guardados solo en este dispositivo.</p>
+        <a className="btn ghost block" href="#/cuenta">
+          Probar la cuenta
+        </a>
+      </section>
+
+      <section className="card pad">
         <h2 className="section-title">Alimentos y recetas</h2>
         <p className="hint">Tu lista de alimentos, los productos que escaneas y tus recetas.</p>
         <a className="btn ghost block" href="#/foods">

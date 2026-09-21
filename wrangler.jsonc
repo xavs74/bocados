@@ -17,5 +17,10 @@
   "workers_dev": false,
   // Branch builds get their own link, so features can be tried on a phone
   // (the camera needs HTTPS) before they reach bocados.org.
-  "preview_urls": true
+  "preview_urls": true,
+  // The client id is public; GOOGLE_CLIENT_SECRET and SESSION_SECRET are
+  // secrets set in Cloudflare (see docs/cuentas.md).
+  "vars": {
+    "GOOGLE_CLIENT_ID": ""
+  }
 }

@@ -25,3 +25,6 @@ dist-ssr
 
 # Cloudflare
 .wrangler
+
+# Local Worker secrets (never commit)
+.dev.vars
