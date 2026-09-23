@@ -32,7 +32,12 @@ export async function handleAuth(request, env) {
 
   if (url.pathname === '/auth/yo') {
     const session = await readSession(request, env)
-    return json(session ? { signedIn: true, email: session.email, name: session.name } : { signedIn: false })
+    const missing = missingSettings(env)
+    return json({
+      ...(session ? { signedIn: true, email: session.email, name: session.name } : { signedIn: false }),
+      // Names only, never values: which of the three the server can't see.
+      ...(missing.length ? { faltan: missing } : {}),
+    })
   }
 
   if (url.pathname === '/auth/salir') {
@@ -40,8 +45,9 @@ export async function handleAuth(request, env) {
     return json({ signedIn: false }, 200, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
   }
 
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.SESSION_SECRET) {
-    return json({ error: 'Falta configurar el acceso con Google en el servidor' }, 503)
+  const missing = missingSettings(env)
+  if (missing.length) {
+    return json({ error: 'Falta configurar el acceso con Google en el servidor', faltan: missing }, 503)
   }
 
   if (url.pathname === '/auth/google') return startGoogle(url, env)
@@ -121,6 +127,11 @@ export async function readSession(request, env) {
   } catch {
     return null
   }
+}
+
+/** Which of the three settings the Worker cannot see, by name. */
+export function missingSettings(env) {
+  return ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SESSION_SECRET'].filter((name) => !String(env?.[name] ?? '').trim())
 }
 
 export const redirectUri = (url) => `${url.origin}/auth/callback`

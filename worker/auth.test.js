@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAuthPath, open, readCookie, readIdToken, redirectUri, sign, verify } from './auth.js'
+import { isAuthPath, missingSettings, open, readCookie, readIdToken, redirectUri, sign, verify } from './auth.js'
 
 const SECRET = 'un secreto de prueba'
 
@@ -70,5 +70,22 @@ describe('routes', () => {
   it('sends Google back to the same site it started from', () => {
     expect(redirectUri(new URL('https://bocados.org/auth/google'))).toBe('https://bocados.org/auth/callback')
     expect(redirectUri(new URL('http://localhost:8788/auth/google'))).toBe('http://localhost:8788/auth/callback')
+  })
+})
+
+describe('missingSettings', () => {
+  const full = { GOOGLE_CLIENT_ID: 'id', GOOGLE_CLIENT_SECRET: 'secreto', SESSION_SECRET: 'sesion' }
+
+  it('says nothing is missing when all three are there', () => {
+    expect(missingSettings(full)).toEqual([])
+  })
+
+  it('names the ones the server cannot see', () => {
+    expect(missingSettings({ ...full, GOOGLE_CLIENT_SECRET: undefined })).toEqual(['GOOGLE_CLIENT_SECRET'])
+    expect(missingSettings({})).toEqual(['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SESSION_SECRET'])
+  })
+
+  it('counts blank as missing', () => {
+    expect(missingSettings({ ...full, SESSION_SECRET: '   ' })).toEqual(['SESSION_SECRET'])
   })
 })
