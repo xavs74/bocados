@@ -1,7 +1,18 @@
-# Accounts — step 1: does signing in work on the phone?
+# Accounts
 
-This step answers one question and nothing else: **when the app is on an iPhone
-home screen, does signing in with Google leave the app and come back into it?**
+**Step 1 is answered: yes.** On an iPhone home-screen app, signing in with
+Google leaves the app, comes back into it, and the session survives closing the
+app. Accounts can stay a normal web app with a cookie; no token juggling needed.
+
+Step 2 is what the rest of this page describes: real accounts, kept in
+Cloudflare's database, with taking your data away and deleting it.
+
+## What the server keeps
+
+An id, an email address, a name, and which ways of signing in belong to the
+account (`migrations/0001_cuentas.sql`). **Nothing else**: no food, no days, no
+weights, no goals. Those stay on the device, and when sync comes they will be a
+separate decision with separate tables.
 
 On iOS a home-screen app has its own window and its own storage. Signing in
 means going out to `accounts.google.com`, which iOS opens in a browser view on
@@ -87,7 +98,24 @@ what the Worker still cannot see.
 It goes into `wrangler.jsonc` as a plain variable, because it is public. Nothing
 works until it is there.
 
-## Then, the test itself
+## The database
+
+Once, from the dashboard (**Workers & Pages → D1 → Create database**, named
+`bocados-cuentas`) or from a terminal:
+
+```bash
+npx wrangler d1 create bocados-cuentas
+```
+
+Either way it prints a **database id**, which goes in `wrangler.jsonc` next to
+`"database_id"`. Send it over and I'll put it in.
+
+The tables themselves need no command: `scripts/deploy.sh` applies everything in
+`migrations/` on each deploy, so a new table arrives with the code that needs
+it. Until the database exists, the account screen says accounts aren't
+configured and the rest of the app carries on as usual.
+
+## Then, the first test itself
 
 On the iPhone, with Bocados **added to the home screen** (not a Safari tab):
 

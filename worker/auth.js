@@ -5,15 +5,19 @@
  *   GET  /auth/callback    Google sends them back here with a code
  *   GET  /auth/yo          who is signed in on this device, if anyone
  *   POST /auth/salir       sign out
+ *   GET  /auth/exportar    everything the server holds about them
+ *   POST /auth/borrar      delete the account and everything in it
  *
- * Nothing is stored yet: the session lives in a signed cookie, so this only
- * proves the round trip works — above all from the app added to an iPhone home
- * screen, which leaves the app to reach Google and has to come back into it.
+ * The session lives in a signed cookie. The account behind it is in D1
+ * (worker/accounts.js) and holds only who someone is: their food, days and
+ * goals stay on the device.
  *
  * The code is exchanged here, server side, with the client secret; the identity
  * comes back inside that answer over TLS straight from Google, so the token is
  * read rather than verified again.
  */
+
+import { deleteUser, exportUser, signIn } from './accounts.js'
 
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
@@ -23,8 +27,10 @@ const STATE_COOKIE = 'bocados_estado'
 export const SESSION_SECONDS = 60 * 60 * 24 * 30
 const STATE_SECONDS = 600
 
+const PATHS = ['/auth/google', '/auth/callback', '/auth/yo', '/auth/salir', '/auth/exportar', '/auth/borrar']
+
 export function isAuthPath(pathname) {
-  return pathname === '/auth/google' || pathname === '/auth/callback' || pathname === '/auth/yo' || pathname === '/auth/salir'
+  return PATHS.includes(pathname)
 }
 
 export async function handleAuth(request, env) {
@@ -43,6 +49,23 @@ export async function handleAuth(request, env) {
   if (url.pathname === '/auth/salir') {
     if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
     return json({ signedIn: false }, 200, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
+  }
+
+  if (url.pathname === '/auth/exportar' || url.pathname === '/auth/borrar') {
+    const session = await readSession(request, env)
+    if (!session?.uid) return json({ error: 'No has entrado' }, 401)
+    if (!env.DB) return json({ error: 'La base de datos de cuentas no está configurada' }, 503)
+
+    if (url.pathname === '/auth/exportar') {
+      const taken = await exportUser(env.DB, session.uid)
+      if (!taken) return json({ error: 'Esa cuenta ya no existe' }, 404, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
+      return json(taken, 200, { 'Content-Disposition': 'attachment; filename="bocados-cuenta.json"' })
+    }
+
+    if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
+    await deleteUser(env.DB, session.uid)
+    // The session goes with the account, so the device is signed out too.
+    return json({ deleted: true }, 200, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
   }
 
   const missing = missingSettings(env)
@@ -104,8 +127,16 @@ async function finishGoogle(url, request, env) {
   const { id_token: idToken } = await answer.json()
   const claims = readIdToken(idToken)
   if (!claims?.sub || !claims.email) return backToApp(url, 'error=identidad')
+  if (!env.DB) return backToApp(url, 'error=sincuentas')
 
-  const session = await sign(JSON.stringify({ sub: claims.sub, email: claims.email, name: claims.name ?? '', exp: now() + SESSION_SECONDS }), env.SESSION_SECRET)
+  let user
+  try {
+    user = await signIn(env.DB, { provider: 'google', subject: claims.sub, email: claims.email, name: claims.name ?? '' })
+  } catch {
+    return backToApp(url, 'error=cuenta')
+  }
+
+  const session = await sign(JSON.stringify({ uid: user.id, email: user.email, name: user.name, exp: now() + SESSION_SECONDS }), env.SESSION_SECRET)
   return backToApp(url, 'ok=1', [cookie(SESSION_COOKIE, session, SESSION_SECONDS), clearCookie(STATE_COOKIE)])
 }
 

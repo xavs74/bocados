@@ -22,5 +22,14 @@
   // secrets set in Cloudflare (see docs/cuentas.md).
   "vars": {
     "GOOGLE_CLIENT_ID": "699913568852-ecak16v76h2jagt8fiooophrc2rms4ca.apps.googleusercontent.com"
-  }
+  },
+  // Accounts (who signed in), created with `wrangler d1 create bocados-cuentas`
+  // or from the dashboard; see docs/cuentas.md. Nobody's food is stored here.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bocados-cuentas",
+      "database_id": ""
+    }
+  ]
 }

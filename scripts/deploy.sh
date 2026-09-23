@@ -21,6 +21,14 @@ for name in GOOGLE_CLIENT_SECRET SESSION_SECRET; do
   fi
 done
 
+# The accounts database keeps its shape in migrations/. Applying them here
+# means a new table never waits on someone running a command by hand. It is
+# skipped quietly while the database does not exist yet: the app says so on the
+# account screen rather than the whole site failing to deploy.
+if ! ${WRANGLER:-npx wrangler} d1 migrations apply bocados-cuentas --remote; then
+  echo "Aviso: no se pudieron aplicar las migraciones de la base de datos de cuentas" >&2
+fi
+
 if [ -s "$file" ]; then
   ${WRANGLER:-npx wrangler} deploy --secrets-file "$file"
 else
