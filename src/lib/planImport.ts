@@ -1,4 +1,4 @@
-import { MEALS, MEAL_LABEL, type Food, type Meal, type Recipe } from '../db'
+import { MEALS, MEAL_LABEL, type Food, type Id, type Meal, type Recipe } from '../db'
 import { SUPERMARKET_CATEGORY } from './categories'
 import { weekdayName } from './dates'
 import { goalGrams, type Goals } from './nutrition'
@@ -263,7 +263,7 @@ export interface RecipeHit {
  * Finds recipes hiding in a meal: when all the ingredients of a recipe (two or
  * more) appear among the meal's foods, the meal is probably that dish.
  */
-export function findRecipes(rows: { key: string; foodId?: number; grams: number }[], recipes: Recipe[]): RecipeHit[] {
+export function findRecipes(rows: { key: string; foodId?: Id; grams: number }[], recipes: Recipe[]): RecipeHit[] {
   const hits: RecipeHit[] = []
   for (const recipe of recipes) {
     const ids = [...new Set(recipe.ingredients.map((i) => i.foodId))]

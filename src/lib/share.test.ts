@@ -4,10 +4,10 @@ import { planText } from './share'
 
 let id = 0
 const item = (meal: Meal, name: string, grams: number, kcal100: number, serving?: { label: string; grams: number }): Planned => ({
-  id: ++id,
+  id: String(++id),
   date: '2026-09-21',
   meal,
-  foodId: id,
+  foodId: String(id),
   name,
   per100: { kcal: kcal100, carbs: 0, protein: 0, fat: 0 },
   grams,

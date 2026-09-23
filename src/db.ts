@@ -13,9 +13,25 @@ export interface Amount {
   serving?: Serving
 }
 
+/**
+ * How every row is identified. A random string rather than a number counted by
+ * the device, so the same row means the same thing on every phone: two devices
+ * would both hand out 5, to different foods.
+ */
+export type Id = string
+
+/**
+ * Rows that travel between devices carry when they last changed. The database
+ * sets it on every write (see the hooks below), so nothing that saves a row has
+ * to remember it.
+ */
+export interface Synced {
+  updatedAt?: number
+}
+
 /** Nutrients are per 100 g. */
-export interface Food extends Nutrients {
-  id: number
+export interface Food extends Nutrients, Synced {
+  id: Id
   name: string
   servings: Serving[]
   /** One of CATEGORIES for built-in foods; missing for foods people create. */
@@ -24,7 +40,7 @@ export interface Food extends Nutrients {
   barcode?: string
   source?: string
   /** Set on the food that mirrors a recipe, so editing opens the recipe. */
-  recipeId?: number
+  recipeId?: Id
   lastUsed?: number
   lastAmount?: Amount
 }
@@ -49,11 +65,11 @@ export const DEFAULT_MEALS: Meal[] = ['breakfast', 'lunch', 'snack', 'dinner']
  * A logged food. Keeps a copy of the food's name and values so editing or
  * deleting the food later doesn't rewrite past days.
  */
-export interface Entry {
-  id: number
+export interface Entry extends Synced {
+  id: Id
   date: string
   meal: Meal
-  foodId: number
+  foodId: Id
   name: string
   per100: Nutrients
   grams: number
@@ -68,14 +84,14 @@ export type Ingredient = Pick<Entry, 'foodId' | 'name' | 'per100' | 'grams' | 'a
  * A dish made of foods. Bocados keeps a food in sync with it (values per 100 g
  * plus a "1 ración" serving), so a recipe is logged like any other food.
  */
-export interface Recipe {
-  id: number
+export interface Recipe extends Synced {
+  id: Id
   name: string
   /** How many servings the whole recipe makes. */
   servings: number
   ingredients: Ingredient[]
   /** The food that mirrors this recipe. */
-  foodId?: number
+  foodId?: Id
   createdAt: number
 }
 
@@ -83,8 +99,8 @@ export interface Recipe {
 export type MealSetItem = Pick<Entry, 'foodId' | 'name' | 'per100' | 'grams' | 'amount'>
 
 /** A group of foods eaten together, logged in one go ("desayuno de siempre"). */
-export interface MealSet {
-  id: number
+export interface MealSet extends Synced {
+  id: Id
   name: string
   items: MealSetItem[]
   createdAt: number
@@ -92,11 +108,11 @@ export interface MealSet {
 }
 
 /** A food planned for a day and meal, before it's actually eaten. */
-export interface Planned {
-  id: number
+export interface Planned extends Synced {
+  id: Id
   date: string
   meal: Meal
-  foodId: number
+  foodId: Id
   name: string
   per100: Nutrients
   grams: number
@@ -108,13 +124,32 @@ export interface Planned {
  * A weigh-in. The date is the key, so weighing twice in a day replaces the
  * day's value; nothing asks anyone to weigh daily.
  */
-export interface Weight {
+export interface Weight extends Synced {
   date: string
   kg: number
   createdAt: number
 }
 
-export interface Setting {
+/**
+ * A row that was deleted, kept so the deletion can travel too. Without it, a day
+ * deleted on the phone would come back from another device.
+ */
+export interface Tombstone {
+  /** table:id, so one table's row can't shadow another's. */
+  id: string
+  table: string
+  uid: string
+  deletedAt: number
+}
+
+/** What everything looked like just before the identifiers changed. */
+export interface Snapshot {
+  id: string
+  at: string
+  tables: Record<string, unknown[]>
+}
+
+export interface Setting extends Partial<Synced> {
   key: string
   value: unknown
 }
@@ -138,6 +173,8 @@ export class BocadosDB extends Dexie {
   planned!: EntityTable<Planned, 'id'>
   settings!: EntityTable<Setting, 'key'>
   weights!: EntityTable<Weight, 'date'>
+  tombstones!: EntityTable<Tombstone, 'id'>
+  snapshots!: EntityTable<Snapshot, 'id'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
     super(name)
@@ -157,8 +194,7 @@ export class BocadosDB extends Dexie {
         if (e.amount.serving) e.amount.serving = rename(e.amount.serving)
       })
     })
-    if (seed) {
-      // Version 3 indexes the barcode of products copied from Open Food Facts.
+    // Version 3 indexes the barcode of products copied from Open Food Facts.
     this.version(3).stores({ foods: '++id, name, lastUsed, barcode' })
     // Version 4 adds saved meals.
     this.version(4).stores({ mealSets: '++id, name, lastUsed' })
@@ -168,7 +204,84 @@ export class BocadosDB extends Dexie {
     this.version(6).stores({ planned: '++id, date' })
     // Version 7 adds weigh-ins, one per day.
     this.version(7).stores({ weights: 'date' })
-    this.on('populate', async (tx) => {
+
+    /*
+     * Versions 8 to 11 swap the numbers the device counted out for identifiers
+     * that mean the same thing on every device, which is what syncing needs.
+     * IndexedDB cannot change a table's key, so the tables are copied aside,
+     * dropped, made again and filled back in. Version 8 also keeps a copy of
+     * everything as it was, in case any of this goes wrong.
+     */
+    this.version(8).stores({ migration: 'id', snapshots: 'id' }).upgrade(async (tx) => {
+      const names = ['foods', 'entries', 'mealSets', 'recipes', 'planned']
+      const old: Record<string, Record<string, unknown>[]> = {}
+      for (const name of names) old[name] = await tx.table(name).toArray()
+
+      await tx.table('snapshots').put({ id: 'antes-de-los-identificadores', at: new Date().toISOString(), tables: old })
+
+      // One new identifier per row, then every reference rewritten to match.
+      const ids: Record<string, Map<number, Id>> = {}
+      for (const name of names) ids[name] = new Map(old[name].map((row) => [row.id as number, newId()]))
+
+      const food = (oldId: unknown) => (typeof oldId === 'number' ? (ids.foods.get(oldId) ?? `borrado-${oldId}`) : (oldId as Id))
+      const withFood = (item: Record<string, unknown>) => ({ ...item, foodId: food(item.foodId) })
+
+      const rewritten: Record<string, Record<string, unknown>[]> = {}
+      for (const name of names) {
+        rewritten[name] = old[name].map((row) => {
+          const next: Record<string, unknown> = { ...row, id: ids[name].get(row.id as number)!, updatedAt: (row.createdAt as number) || Date.now() }
+          if (name === 'foods' && typeof row.recipeId === 'number') next.recipeId = ids.recipes.get(row.recipeId) ?? undefined
+          if (name === 'entries' || name === 'planned') next.foodId = food(row.foodId)
+          if (name === 'recipes') {
+            next.foodId = typeof row.foodId === 'number' ? food(row.foodId) : undefined
+            next.ingredients = ((row.ingredients ?? []) as Record<string, unknown>[]).map(withFood)
+          }
+          if (name === 'mealSets') next.items = ((row.items ?? []) as Record<string, unknown>[]).map(withFood)
+          return next
+        })
+      }
+
+      for (const name of names) await tx.table('migration').put({ id: name, rows: rewritten[name] })
+    })
+
+    // Version 9 drops the tables keyed by a number: the key itself cannot change.
+    this.version(9).stores({ foods: null, entries: null, mealSets: null, recipes: null, planned: null })
+
+    // Version 10 makes them again, keyed by the new identifier, and fills them back in.
+    this.version(10)
+      .stores({
+        foods: 'id, name, lastUsed, barcode, updatedAt',
+        entries: 'id, date, foodId, updatedAt',
+        mealSets: 'id, name, lastUsed, updatedAt',
+        recipes: 'id, name, updatedAt',
+        planned: 'id, date, updatedAt',
+        weights: 'date, updatedAt',
+        settings: 'key, updatedAt',
+        tombstones: 'id, deletedAt',
+      })
+      .upgrade(async (tx) => {
+        for (const name of ['foods', 'entries', 'mealSets', 'recipes', 'planned']) {
+          const stored = await tx.table('migration').get(name)
+          if (stored?.rows?.length) await tx.table(name).bulkAdd(stored.rows)
+        }
+        const now = Date.now()
+        for (const name of ['weights', 'settings']) {
+          await tx
+            .table(name)
+            .toCollection()
+            .modify((row: Record<string, unknown>) => {
+              row.updatedAt = (row.createdAt as number) || now
+            })
+        }
+      })
+
+    // Version 11 clears the copies made along the way; the snapshot stays.
+    this.version(11).stores({ migration: null })
+
+    // Only a brand new database of this person's own starts with the built-in
+    // foods; the one opened to read someone's old data must stay as it was.
+    if (seed) {
+      this.on('populate', async (tx) => {
         await tx.table('foods').bulkAdd(seedFoods)
         await tx.table('settings').add({ key: 'goals', value: DEFAULT_GOALS })
       })
@@ -176,7 +289,58 @@ export class BocadosDB extends Dexie {
   }
 }
 
+/** A new identifier: unique wherever it is made, so devices never collide. */
+export const newId = (): Id => crypto.randomUUID()
+
 export const db = new BocadosDB('bocados', { seed: true })
+
+/** Tables that travel between devices, with the key each one is known by. */
+export const SYNCED_TABLES = ['foods', 'entries', 'mealSets', 'recipes', 'planned', 'weights', 'settings'] as const
+
+let recording = true
+
+/**
+ * Runs something without marking what it deletes. Restoring a copy empties every
+ * table and fills it again: those are not deletions, and marking them would tell
+ * the other devices to delete everything.
+ */
+export async function withoutTombstones<T>(fn: () => Promise<T>): Promise<T> {
+  recording = false
+  try {
+    return await fn()
+  } finally {
+    recording = true
+  }
+}
+
+/**
+ * Identifiers, timestamps and tombstones are kept by the database itself rather
+ * than by whoever writes to it, so no call site can forget one. The tombstone
+ * is written once the delete has actually gone through, so a transaction that
+ * rolls back cannot leave a row marked as deleted while it is still there.
+ */
+for (const name of SYNCED_TABLES) {
+  const table = db.table(name)
+  const keyed = name === 'weights' || name === 'settings'
+
+  table.hook('creating', (_key, row: Record<string, unknown>) => {
+    if (!keyed && !row.id) row.id = newId()
+    if (!row.updatedAt) row.updatedAt = Date.now()
+  })
+
+  table.hook('updating', (changes) => ('updatedAt' in (changes as Record<string, unknown>) ? undefined : { updatedAt: Date.now() }))
+
+  table.hook('deleting', (key, row, transaction) => {
+    // Dexie calls this even for a key that isn't there; nothing was deleted then.
+    if (!recording || !row) return
+    const uid = String(key)
+    // The delete's own transaction covers only its table, so the mark is
+    // written once that has committed. A delete that rolls back leaves none.
+    transaction.on('complete', () => {
+      void db.tombstones.put({ id: `${name}:${uid}`, table: name, uid, deletedAt: Date.now() })
+    })
+  })
+}
 
 /**
  * Why the screens have no data. Everything is read through live queries, and a

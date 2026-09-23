@@ -1,4 +1,4 @@
-import { db, type Food, type Ingredient, type Recipe } from '../db'
+import { db, type Food, type Id, type Ingredient, type Recipe } from '../db'
 import { RECIPE_CATEGORY } from './categories'
 import { scale, sum, type Nutrients } from './nutrition'
 
@@ -41,7 +41,7 @@ export function foodFromRecipe(recipe: Pick<Recipe, 'name' | 'servings' | 'ingre
 }
 
 /** Creates or updates a recipe together with the food that mirrors it. */
-export async function saveRecipe(recipe: Pick<Recipe, 'name' | 'servings' | 'ingredients'> & { id?: number; foodId?: number }): Promise<number> {
+export async function saveRecipe(recipe: Pick<Recipe, 'name' | 'servings' | 'ingredients'> & { id?: Id; foodId?: Id }): Promise<Id> {
   const food = foodFromRecipe(recipe)
   return db.transaction('rw', db.recipes, db.foods, async () => {
     const id = recipe.id ?? (await db.recipes.add({ ...recipe, createdAt: Date.now() } as Recipe))

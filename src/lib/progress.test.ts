@@ -17,10 +17,10 @@ import {
 
 let id = 0
 const entry = (date: string, kcal: number, macros = { carbs: 50, protein: 30, fat: 20 }): Entry => ({
-  id: ++id,
+  id: String(++id),
   date,
   meal: 'lunch',
-  foodId: 1,
+  foodId: 'f1',
   name: 'Comida',
   per100: { kcal, ...macros },
   grams: 100,

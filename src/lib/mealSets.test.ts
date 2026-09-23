@@ -3,10 +3,10 @@ import type { Entry } from '../db'
 import { describeItems, entriesFromItems, itemsFromEntries, totalsOf } from './mealSets'
 
 const entry = (name: string, grams: number, createdAt: number): Entry => ({
-  id: createdAt,
+  id: String(createdAt),
   date: '2026-09-10',
   meal: 'breakfast',
-  foodId: 1,
+  foodId: 'f1',
   name,
   per100: { kcal: 370, carbs: 56, protein: 17, fat: 7 },
   grams,
@@ -19,7 +19,7 @@ const entries = [entry('Copos de avena', 50, 2), entry('Leche semidesnatada', 25
 describe('itemsFromEntries', () => {
   it('keeps the values but drops the day and id', () => {
     const items = itemsFromEntries(entries)
-    expect(items[0]).toEqual({ foodId: 1, name: 'Copos de avena', per100: entries[0].per100, grams: 50, amount: { quantity: 50 } })
+    expect(items[0]).toEqual({ foodId: 'f1', name: 'Copos de avena', per100: entries[0].per100, grams: 50, amount: { quantity: 50 } })
     expect(items[0]).not.toHaveProperty('date')
     expect(items[0]).not.toHaveProperty('id')
   })

@@ -3,7 +3,7 @@ import type { Ingredient } from '../db'
 import { foodFromRecipe, perServing, recipeTotals, servingGrams } from './recipes'
 
 const ingredient = (name: string, per100: [number, number, number, number], grams: number): Ingredient => ({
-  foodId: 1,
+  foodId: 'f1',
   name,
   per100: { kcal: per100[0], carbs: per100[1], protein: per100[2], fat: per100[3] },
   grams,

@@ -1,4 +1,4 @@
-import { db } from '../db'
+import { db, withoutTombstones } from '../db'
 
 const FORMAT = 'bocados-backup'
 // Backups exported before the rename to Bocados.
@@ -12,12 +12,19 @@ export interface Backup {
 }
 
 /**
+ * Tables deliberately left out of a copy. The snapshot is what everything
+ * looked like before the identifiers changed: keeping it would double the size
+ * of every backup, and it is only useful on the device that made it.
+ */
+const SKIP = ['snapshots', 'migration']
+
+/**
  * Everything in the database, table by table. The tables come from Dexie rather
  * than a list written here, so a table added later can't be left out of backups
  * by mistake and lost on the next restore.
  */
 export async function collectBackup(): Promise<Backup> {
-  const tables = await Promise.all(db.tables.map(async (t) => [t.name, await t.toArray()] as const))
+  const tables = await Promise.all(db.tables.filter((t) => !SKIP.includes(t.name)).map(async (t) => [t.name, await t.toArray()] as const))
   return {
     format: FORMAT,
     version: 1,
@@ -53,13 +60,18 @@ export async function restoreBackup(data: unknown): Promise<{ foods: number; ent
   if ((b?.format !== FORMAT && b?.format !== LEGACY_FORMAT) || !Array.isArray(b.foods) || !Array.isArray(b.entries) || !Array.isArray(b.settings)) {
     throw new Error('Ese archivo no es una copia de Bocados.')
   }
-  await db.transaction('rw', db.tables, async () => {
-    await Promise.all(db.tables.map((t) => t.clear()))
-    for (const table of db.tables) {
-      // Backups made before a table existed simply don't carry it.
-      const rows = b[table.name]
-      if (Array.isArray(rows) && rows.length) await table.bulkAdd(rows as never[])
-    }
-  })
+  const tables = db.tables.filter((t) => !SKIP.includes(t.name))
+  // Emptying the tables here is not deleting anyone's food: it is replacing it
+  // with the copy, so none of it is marked as deleted for other devices.
+  await withoutTombstones(() =>
+    db.transaction('rw', tables, async () => {
+      await Promise.all(tables.map((t) => t.clear()))
+      for (const table of tables) {
+        // Backups made before a table existed simply don't carry it.
+        const rows = b[table.name]
+        if (Array.isArray(rows) && rows.length) await table.bulkAdd(rows as never[])
+      }
+    }),
+  )
   return { foods: b.foods.length, entries: b.entries.length }
 }

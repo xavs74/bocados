@@ -1,4 +1,4 @@
-import { MEALS, db, type Entry, type Meal, type Planned, type Recipe } from '../db'
+import { MEALS, db, type Entry, type Id, type Meal, type Planned, type Recipe } from '../db'
 import { categoryOf } from './categories'
 import { addDays, weekDays } from './dates'
 import { itemsFromEntries, type PastMeal } from './mealSets'
@@ -98,7 +98,7 @@ export interface ShoppingLine {
  * already eaten aren't in the plan any more, so the list only covers what's
  * still to buy.
  */
-export function shoppingList(planned: Planned[], categoryFor: (foodId: number) => string): ShoppingLine[] {
+export function shoppingList(planned: Planned[], categoryFor: (foodId: Id) => string): ShoppingLine[] {
   const lines = new Map<string, ShoppingLine & { labels: Set<string>; count: number }>()
   for (const p of planned) {
     const key = p.name.toLowerCase()
@@ -131,7 +131,7 @@ export function shoppingList(planned: Planned[], categoryFor: (foodId: number) =
  * planned: you buy rice and chicken, not "arroz con pollo". Recipes inside
  * recipes are opened too.
  */
-export function expandRecipes(planned: Planned[], recipeFor: (foodId: number) => Recipe | undefined, depth = 0): Planned[] {
+export function expandRecipes(planned: Planned[], recipeFor: (foodId: Id) => Recipe | undefined, depth = 0): Planned[] {
   return planned.flatMap((p) => {
     const recipe = depth < 3 ? recipeFor(p.foodId) : undefined
     const total = recipe ? recipe.ingredients.reduce((g, i) => g + i.grams, 0) : 0
@@ -143,7 +143,7 @@ export function expandRecipes(planned: Planned[], recipeFor: (foodId: number) =>
 }
 
 /** Looks up each planned food's category from the food list. */
-export function categoryLookup(foods: { id: number; category?: string }[]): (foodId: number) => string {
+export function categoryLookup(foods: { id: Id; category?: string }[]): (foodId: Id) => string {
   const byId = new Map(foods.map((f) => [f.id, categoryOf(f)]))
   return (foodId) => byId.get(foodId) ?? 'Otros'
 }

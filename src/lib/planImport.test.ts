@@ -61,17 +61,17 @@ describe('parsePlan', () => {
   })
 })
 
-const food = (id: number, name: string): Food => ({ id, name, kcal: 100, carbs: 1, protein: 1, fat: 1, servings: [] })
-const foods = [food(1, 'Arroz blanco (crudo)'), food(2, 'Arroz integral (crudo)'), food(3, 'Leche semidesnatada'), food(4, 'Pechuga de pollo (cruda)')]
+const food = (id: string, name: string): Food => ({ id, name, kcal: 100, carbs: 1, protein: 1, fat: 1, servings: [] })
+const foods = [food('f1', 'Arroz blanco (crudo)'), food('f2', 'Arroz integral (crudo)'), food('f3', 'Leche semidesnatada'), food('f4', 'Pechuga de pollo (cruda)')]
 
 describe('matchFood', () => {
   it('matches on every word, ignoring accents and case', () => {
-    expect(matchFood('arroz blanco', foods)?.food.id).toBe(1)
-    expect(matchFood('LECHE Semidesnatada', foods)?.food.id).toBe(3)
+    expect(matchFood('arroz blanco', foods)?.food.id).toBe('f1')
+    expect(matchFood('LECHE Semidesnatada', foods)?.food.id).toBe('f3')
   })
 
   it('accepts a partial match when it is good enough', () => {
-    expect(matchFood('pechuga de pollo a la plancha', foods)?.food.id).toBe(4)
+    expect(matchFood('pechuga de pollo a la plancha', foods)?.food.id).toBe('f4')
   })
 
   it('gives up when nothing is close', () => {
@@ -79,17 +79,17 @@ describe('matchFood', () => {
   })
 
   // The bug: "claras de huevo" became "Huevo", so eggs appeared twice in one breakfast.
-  const eggs = [food(10, 'Huevo'), food(11, 'Clara de huevo')]
+  const eggs = [food('f10', 'Huevo'), food('f11', 'Clara de huevo')]
 
   it('tells egg whites apart from whole eggs, plural or not', () => {
-    expect(matchFood('claras de huevo', eggs)?.food.id).toBe(11)
-    expect(matchFood('clara de huevo', eggs)?.food.id).toBe(11)
-    expect(matchFood('huevos', eggs)?.food.id).toBe(10)
-    expect(matchFood('huevo', eggs)?.food.id).toBe(10)
+    expect(matchFood('claras de huevo', eggs)?.food.id).toBe('f11')
+    expect(matchFood('clara de huevo', eggs)?.food.id).toBe('f11')
+    expect(matchFood('huevos', eggs)?.food.id).toBe('f10')
+    expect(matchFood('huevo', eggs)?.food.id).toBe('f10')
   })
 
   it('prefers the food whose whole name is covered', () => {
-    expect(matchFood('tomates', [food(20, 'Tomate'), food(21, 'Tomate triturado en conserva')])?.food.id).toBe(20)
+    expect(matchFood('tomates', [food('f20', 'Tomate'), food('f21', 'Tomate triturado en conserva')])?.food.id).toBe('f20')
   })
 })
 
@@ -106,20 +106,20 @@ describe('sameWord', () => {
 })
 
 describe('findRecipes', () => {
-  const recipe = { id: 1, name: 'Arroz con pollo', servings: 4, foodId: 99, createdAt: 0, ingredients: [
-    { foodId: 1, name: 'Arroz', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 400, amount: { quantity: 400 } },
-    { foodId: 4, name: 'Pollo', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 600, amount: { quantity: 600 } },
+  const recipe = { id: 'r1', name: 'Arroz con pollo', servings: 4, foodId: 'f99', createdAt: 0, ingredients: [
+    { foodId: 'f1', name: 'Arroz', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 400, amount: { quantity: 400 } },
+    { foodId: 'f4', name: 'Pollo', per100: { kcal: 0, carbs: 0, protein: 0, fat: 0 }, grams: 600, amount: { quantity: 600 } },
   ] } satisfies Recipe
 
   it('spots a recipe when all its ingredients are in the meal', () => {
-    const hits = findRecipes([{ key: 'a', foodId: 1, grams: 80 }, { key: 'b', foodId: 4, grams: 150 }, { key: 'c', foodId: 3, grams: 200 }], [recipe])
+    const hits = findRecipes([{ key: 'a', foodId: 'f1', grams: 80 }, { key: 'b', foodId: 'f4', grams: 150 }, { key: 'c', foodId: 'f3', grams: 200 }], [recipe])
     expect(hits).toHaveLength(1)
     expect(hits[0].keys).toEqual(['a', 'b'])
     expect(hits[0].grams).toBe(230)
   })
 
   it('ignores a meal that only has part of the recipe', () => {
-    expect(findRecipes([{ key: 'a', foodId: 1, grams: 80 }], [recipe])).toEqual([])
+    expect(findRecipes([{ key: 'a', foodId: 'f1', grams: 80 }], [recipe])).toEqual([])
   })
 })
 
@@ -169,9 +169,9 @@ describe('buildPrompt', () => {
 describe('foodNamesForPrompt', () => {
   it('puts the most recently used foods first and leaves supermarket products out', () => {
     const list = [
-      { ...food(1, 'Arroz blanco (crudo)'), category: 'Cereales, pan y pasta' },
-      { ...food(2, 'Yogur natural'), category: 'Lácteos y bebidas vegetales', lastUsed: 5 },
-      { ...food(3, 'Bollería de marca'), category: 'Supermercado', lastUsed: 9 },
+      { ...food('f1', 'Arroz blanco (crudo)'), category: 'Cereales, pan y pasta' },
+      { ...food('f2', 'Yogur natural'), category: 'Lácteos y bebidas vegetales', lastUsed: 5 },
+      { ...food('f3', 'Bollería de marca'), category: 'Supermercado', lastUsed: 9 },
     ]
     expect(foodNamesForPrompt(list)).toEqual(['Yogur natural', 'Arroz blanco (crudo)'])
   })

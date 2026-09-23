@@ -5,7 +5,7 @@ import { FoodForm } from '../components/FoodForm'
 import { RecipeForm } from '../components/RecipeForm'
 import { Sheet } from '../components/Sheet'
 import { ScanSheet } from '../components/ScanSheet'
-import { db, type Food, type Recipe } from '../db'
+import { db, type Food, type Id, type Recipe } from '../db'
 import { addMissingBasicFoods, missingBasicFoods } from '../lib/basicFoods'
 import { categoryOf, groupByCategory } from '../lib/categories'
 import { kcal, matches, num } from '../lib/format'
@@ -19,7 +19,7 @@ export function Foods() {
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Food | 'new' | null>(null)
   // null when not selecting; otherwise the ids picked for deletion.
-  const [selected, setSelected] = useState<Set<number> | null>(null)
+  const [selected, setSelected] = useState<Set<Id> | null>(null)
   const [scanning, setScanning] = useState(false)
   const [added, setAdded] = useState<string | null>(null)
   const [scannedBarcode, setScannedBarcode] = useState<string | undefined>()
@@ -59,7 +59,7 @@ export function Foods() {
     setSelected(null)
   }
 
-  function toggle(id: number) {
+  function toggle(id: Id) {
     const next = new Set(selected)
     if (next.has(id)) next.delete(id)
     else next.add(id)
@@ -257,10 +257,10 @@ const slug = (s: string) => s.normalize('NFD').replace(/[^\w]+/g, '-').toLowerCa
 
 interface ListProps {
   foods: Food[]
-  selected: Set<number> | null
+  selected: Set<Id> | null
   showCategory?: boolean
   laptop: boolean
-  onToggle: (id: number) => void
+  onToggle: (id: Id) => void
   onOpen: (food: Food) => void
 }
 

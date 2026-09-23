@@ -1,4 +1,4 @@
-import type { Amount, Entry, Food, Meal } from '../db'
+import type { Amount, Entry, Food, Id, Meal } from '../db'
 import { addDays } from './dates'
 
 /** How far back "lo de siempre" looks. */
@@ -24,10 +24,10 @@ export const usualFrom = (date: string) => addDays(date, -USUAL_DAYS)
  * last time. Foods already in the meal on `date` are left out, and so are
  * foods that have since been deleted.
  */
-export function usualFoods(entries: Entry[], meal: Meal, date: string, foods: Map<number, Food>): UsualFood[] {
+export function usualFoods(entries: Entry[], meal: Meal, date: string, foods: Map<Id, Food>): UsualFood[] {
   const from = usualFrom(date)
-  const byFood = new Map<number, { days: Set<string>; last: Entry }>()
-  const already = new Set<number>()
+  const byFood = new Map<Id, { days: Set<string>; last: Entry }>()
+  const already = new Set<Id>()
 
   for (const e of entries) {
     if (e.meal !== meal) continue

@@ -1,4 +1,4 @@
-import { MEALS, db, type Entry, type Meal, type MealSet, type MealSetItem } from '../db'
+import { MEALS, db, type Entry, type Meal, type MealSet, type MealSetItem, type Id } from '../db'
 import { scale, sum, type Nutrients } from './nutrition'
 
 /** Strips the day from logged foods so they can be logged again elsewhere. */
@@ -75,7 +75,7 @@ export async function copyDay(from: string, to: string): Promise<number> {
   return copies.length
 }
 
-export async function saveMealSet(name: string, items: MealSetItem[]): Promise<number> {
+export async function saveMealSet(name: string, items: MealSetItem[]): Promise<Id> {
   return db.mealSets.add({ name: name.trim(), items, createdAt: Date.now() } as MealSet)
 }
 
