@@ -14,9 +14,11 @@ export interface Backup {
 /**
  * Tables deliberately left out of a copy. The snapshot is what everything
  * looked like before the identifiers changed: keeping it would double the size
- * of every backup, and it is only useful on the device that made it.
+ * of every backup, and it is only useful on the device that made it. How far
+ * syncing has got belongs to the device too: another phone restoring it would
+ * think it had already seen everything.
  */
-const SKIP = ['snapshots', 'migration']
+const SKIP = ['snapshots', 'migration', 'sync']
 
 /**
  * Everything in the database, table by table. The tables come from Dexie rather

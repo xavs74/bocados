@@ -142,6 +142,21 @@ export interface Tombstone {
   deletedAt: number
 }
 
+/**
+ * How far this device has got with syncing. It stays on the device: a cursor
+ * copied to another phone would make it skip everything it has not seen.
+ */
+export interface SyncState {
+  id: 'state'
+  /** The account's running count this device has caught up with. */
+  cursor: number
+  /** Changes made after this have not been sent yet. */
+  pushedAt: number
+  lastAt?: number
+  /** Off until the person has decided what happens to this device's data. */
+  enabled?: boolean
+}
+
 /** What everything looked like just before the identifiers changed. */
 export interface Snapshot {
   id: string
@@ -175,6 +190,7 @@ export class BocadosDB extends Dexie {
   weights!: EntityTable<Weight, 'date'>
   tombstones!: EntityTable<Tombstone, 'id'>
   snapshots!: EntityTable<Snapshot, 'id'>
+  sync!: EntityTable<SyncState, 'id'>
 
   constructor(name: string, { seed }: { seed: boolean }) {
     super(name)
@@ -278,6 +294,9 @@ export class BocadosDB extends Dexie {
     // Version 11 clears the copies made along the way; the snapshot stays.
     this.version(11).stores({ migration: null })
 
+    // Version 12 remembers how far this device has got with syncing.
+    this.version(12).stores({ sync: 'id' })
+
     // Only a brand new database of this person's own starts with the built-in
     // foods; the one opened to read someone's old data must stay as it was.
     if (seed) {
@@ -298,6 +317,18 @@ export const db = new BocadosDB('bocados', { seed: true })
 export const SYNCED_TABLES = ['foods', 'entries', 'mealSets', 'recipes', 'planned', 'weights', 'settings'] as const
 
 let recording = true
+
+const writeWatchers = new Set<() => void>()
+
+/** Told whenever something on this device changes, so syncing can follow along. */
+export function onLocalWrite(fn: () => void): () => void {
+  writeWatchers.add(fn)
+  return () => void writeWatchers.delete(fn)
+}
+
+function localWrite() {
+  if (recording) for (const fn of writeWatchers) fn()
+}
 
 /**
  * Runs something without marking what it deletes. Restoring a copy empties every
@@ -326,9 +357,13 @@ for (const name of SYNCED_TABLES) {
   table.hook('creating', (_key, row: Record<string, unknown>) => {
     if (!keyed && !row.id) row.id = newId()
     if (!row.updatedAt) row.updatedAt = Date.now()
+    localWrite()
   })
 
-  table.hook('updating', (changes) => ('updatedAt' in (changes as Record<string, unknown>) ? undefined : { updatedAt: Date.now() }))
+  table.hook('updating', (changes) => {
+    localWrite()
+    return 'updatedAt' in (changes as Record<string, unknown>) ? undefined : { updatedAt: Date.now() }
+  })
 
   table.hook('deleting', (key, row, transaction) => {
     // Dexie calls this even for a key that isn't there; nothing was deleted then.
@@ -338,6 +373,7 @@ for (const name of SYNCED_TABLES) {
     // written once that has committed. A delete that rolls back leaves none.
     transaction.on('complete', () => {
       void db.tombstones.put({ id: `${name}:${uid}`, table: name, uid, deletedAt: Date.now() })
+      localWrite()
     })
   })
 }

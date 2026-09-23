@@ -30,7 +30,7 @@ async function fill() {
 }
 
 /** What a copy is expected to carry: everything except what SKIP leaves out. */
-const carried = () => db.tables.filter((t) => !['snapshots', 'migration'].includes(t.name))
+const carried = () => db.tables.filter((t) => !['snapshots', 'migration', 'sync'].includes(t.name))
 
 const counts = async () => Object.fromEntries(await Promise.all(carried().map(async (t) => [t.name, await t.count()] as const)))
 
