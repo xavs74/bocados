@@ -8,7 +8,8 @@ hold only who you are. This is the step where your food data leaves the device
 for the first time, so it decides what is stored, where, and what happens the
 first time two devices meet.
 
-**Nothing here is built yet.** It is a plan to argue with.
+**Nothing here is built yet.** The decisions at the end are agreed; the rest is
+the plan they came from.
 
 ## What has to be true
 
@@ -119,13 +120,22 @@ account that also has data?
 3. **The device wins** — the account is replaced with this phone's data. Same
    problem, pointing the other way.
 
-**I recommend merging**, because it is the only one that cannot lose a day, and
-duplicates are visible and fixable in Alimentos. The first sign-in on a device
-that already has data should say so plainly:
+**Agreed: the account wins, with a way out.**
 
-> Este móvil ya tiene datos apuntados. Al entrar se juntarán con los de tu
-> cuenta; no se borra nada. Si algún alimento acaba repetido, puedes borrarlo en
-> Alimentos.
+- **An empty account** takes whatever the device has, with nothing asked. This is
+  every first sign-in today.
+- **When both sides have data**, one screen, with the real counts:
+
+  > Tu cuenta ya tiene **312 días apuntados**. Este móvil tiene **7 días** que no
+  > están en tu cuenta.
+  >
+  > [Usar los de la cuenta] [Juntarlos]
+
+  "Usar los de la cuenta" is the main button and replaces what the device holds.
+  "Juntarlos" is plain syncing, which costs nothing to offer and is the only
+  answer that cannot lose a day.
+- **Before anything is replaced**, the device exports a copy of itself to a file,
+  so a wrong tap is recoverable.
 
 Settings are the exception: `goals` and `meals` are single-valued, so the most
 recently changed one wins, like any other conflict.
@@ -138,20 +148,13 @@ thousand daily users. A year of one person's logging is about 2 MB, against a
 500 MB database. The first sync of an existing phone is the biggest single
 moment, and it is a few thousand rows once.
 
-## 7. Before any of this: where the database lives
+## 7. Where the database lives — done
 
-**A D1 database can only be pinned to the EU when it is created**, never
-afterwards. `bocados-cuentas` was created without that constraint and currently
-holds one account, so the cheap moment to fix it is now:
-
-```bash
-npx wrangler d1 create bocados-cuentas-eu --jurisdiction=eu
-```
-
-Then point `wrangler.jsonc` at the new id and sign in again. Once this table
-holds what people eat, it is health data under GDPR, and "it lives in the EU" is
-much easier to say if it was built that way. Doing it later means moving
-everyone's data.
+A D1 database can only be pinned to the EU when it is created. The first one was
+not, and sat in Western North America, so it was replaced by
+`bocados-cuentas-eu`, created with `--jurisdiction=eu`, while it still held a
+single account. Once these tables hold what people eat, that is health data
+under GDPR, and it now lives where it should.
 
 ## 8. What could go wrong
 
@@ -189,12 +192,20 @@ everyone's data.
 Steps 1 and 2 can be built and merged safely because neither changes what anyone
 sees. Step 3 is where data starts moving.
 
-## Questions for you
+## Decisions
 
-1. **Merge on first sign-in**, as recommended, or should the account simply win?
-2. **Recreate the database in the EU now**, while it holds one row?
-3. **Should signing out wipe the device's data?** It is the safe answer for a
-   shared phone, and a shock if you expected the app to keep working offline as
-   before. My instinct: ask, with "keep it on this device" as the default.
-4. **One account per person, or a family account?** Everything above assumes one
-   per person. Sharing a plan between people is a different feature.
+1. **The account wins on first sign-in**, as in §5: silent upload into an empty
+   account, and a screen with counts when both sides have data, offering
+   "Juntarlos" and exporting a copy before replacing anything.
+2. **The database is in the EU**, recreated for it (§7).
+3. **Signing out asks** what to do with the device's data, and keeping it is the
+   default. Wiping is for a shared phone, and says so.
+4. **One account per person.** A family account is not planned.
+
+## Later, not now
+
+A **trainer or nutritionist** who follows someone else's plan: their own account,
+granted access to another person's data by invitation, rather than two people
+sharing one account. Nothing in this design blocks it — the rows already belong
+to a person, so access is a question of who may read them. It needs permissions,
+invitations and a way to take access back, so it is its own piece of work.
