@@ -44,10 +44,10 @@ logo on Google's own screen.
 The client ID is public and goes in the repository. **The secret is not**: it
 goes straight into Cloudflare and never into git or a chat message.
 
-### 3. Put the secret into Cloudflare
+### 3. Put the secrets into Cloudflare
 
-In the Cloudflare dashboard: **Workers & Pages → bocados → Settings → Variables
-and Secrets → Add**, as *Secret*, twice:
+They go in **Settings → Build → Variables and secrets**, as *encrypted*, not in
+the Worker's own "Variables and Secrets" page:
 
 | Name | Value |
 |---|---|
@@ -60,11 +60,27 @@ For the random one, this prints a good value:
 openssl rand -base64 32
 ```
 
-The same thing from the terminal, if you prefer it to the dashboard:
+And set the **deploy command** of the build to:
+
+```
+sh scripts/deploy.sh
+```
+
+**Why the build page and not the obvious one.** bocados.org is deployed from git
+by Workers Builds, and deploying that way deletes the Worker's runtime secrets
+([workers-sdk#8871](https://github.com/cloudflare/workers-sdk/issues/8871)), so
+anything added on the Worker's own page disappears at the next push and sign-in
+breaks again. Kept as build secrets, `scripts/deploy.sh` writes them back on
+every deploy.
+
+To check they arrived, from any machine:
 
 ```bash
-npx wrangler secret put GOOGLE_CLIENT_SECRET
+curl -s https://bocados.org/auth/yo
 ```
+
+`{"signedIn":false}` on its own means everything is set; a `faltan` list names
+what the Worker still cannot see.
 
 ### 4. Send me the client ID
 
