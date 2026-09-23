@@ -21,6 +21,6 @@
   // The client id is public; GOOGLE_CLIENT_SECRET and SESSION_SECRET are
   // secrets set in Cloudflare (see docs/cuentas.md).
   "vars": {
-    "GOOGLE_CLIENT_ID": ""
+    "GOOGLE_CLIENT_ID": "699913568852-ecak16v76h2jagt8fiooophrc2rms4ca.apps.googleusercontent.com"
   }
 }
