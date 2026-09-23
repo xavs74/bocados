@@ -23,13 +23,14 @@
   "vars": {
     "GOOGLE_CLIENT_ID": "699913568852-ecak16v76h2jagt8fiooophrc2rms4ca.apps.googleusercontent.com"
   },
-  // Accounts (who signed in), created with `wrangler d1 create bocados-cuentas`
-  // or from the dashboard; see docs/cuentas.md. Nobody's food is stored here.
+  // Accounts (who signed in). Created with --jurisdiction=eu so the data stays
+  // in the EU, which can only be chosen when the database is made; see
+  // docs/cuentas.md. Nobody's food is stored here yet.
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "bocados-cuentas",
-      "database_id": "83d66419-f6f1-4973-aa9b-763d45c12909"
+      "database_name": "bocados-cuentas-eu",
+      "database_id": "ee48f9b5-47ce-467f-9ee7-bd2b25cf1138"
     }
   ]
 }

@@ -101,11 +101,14 @@ works until it is there.
 ## The database
 
 Once, from the dashboard (**Workers & Pages → D1 → Create database**, named
-`bocados-cuentas`) or from a terminal:
+`bocados-cuentas-eu`) or from a terminal:
 
 ```bash
-npx wrangler d1 create bocados-cuentas
+npx wrangler d1 create bocados-cuentas-eu --jurisdiction=eu
 ```
+
+`--jurisdiction=eu` keeps the data in the EU and **can only be chosen when the
+database is created**, so it is worth getting right the first time.
 
 Either way it prints a **database id**, which goes in `wrangler.jsonc` next to
 `"database_id"`. Send it over and I'll put it in.
