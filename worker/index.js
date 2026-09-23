@@ -7,15 +7,16 @@
  *   GET /api/buscar?q=pechuga+hacendado   search supermarket products
  *   GET /api/codigo/8480000123456         look one up by barcode
  *
- * It also answers /auth/* while signing in with Google is being tried out
- * (worker/auth.js).
+ * It also answers /auth/* for signing in (worker/auth.js) and /sync, which
+ * carries rows between someone's devices (worker/sync.js).
  *
  * Open Food Facts allows only 10 searches a minute per address and doesn't let
  * browsers call its search directly, so every request goes through here, with
  * answers cached so repeated searches don't reach them at all.
  */
 
-import { handleAuth, isAuthPath } from './auth.js'
+import { handleAuth, isAuthPath, readSession } from './auth.js'
+import { handleSync } from './sync.js'
 
 const SEARCH_URL = 'https://search.openfoodfacts.org/search'
 const PRODUCT_URL = 'https://world.openfoodfacts.org/api/v2/product'
@@ -28,6 +29,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (isAuthPath(url.pathname)) return await handleAuth(request, env)
+    if (url.pathname === '/sync') {
+      const session = await readSession(request, env)
+      if (!session?.uid) return json({ error: 'No has entrado' }, 401)
+      return await handleSync(request, env, session)
+    }
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request)
     if (request.method !== 'GET') return json({ error: 'Método no permitido' }, 405)
 

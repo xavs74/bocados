@@ -16,7 +16,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         // Signing in leaves the app and comes back through the Worker: the
         // service worker must not answer those with the app's own page.
-        navigateFallbackDenylist: [/^\/auth\//, /^\/api\//],
+        navigateFallbackDenylist: [/^\/auth\//, /^\/api\//, /^\/sync$/],
       },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {

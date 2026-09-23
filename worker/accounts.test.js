@@ -1,36 +1,6 @@
-import { readFileSync } from 'node:fs'
-import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { fakeD1 } from './fakeD1.js'
 import { cleanEmail, deleteUser, exportUser, getUser, signIn } from './accounts.js'
-
-/**
- * D1's shape over SQLite, so the tests run the same SQL the Worker runs,
- * against the same schema file that is applied to D1.
- */
-function fakeD1() {
-  const db = new DatabaseSync(':memory:')
-  db.exec(readFileSync(new URL('../migrations/0001_cuentas.sql', import.meta.url), 'utf8'))
-  return {
-    prepare(sql) {
-      return {
-        bind(...args) {
-          const statement = db.prepare(sql)
-          return {
-            async first() {
-              return statement.get(...args) ?? null
-            },
-            async run() {
-              return statement.run(...args)
-            },
-            async all() {
-              return { results: statement.all(...args) }
-            },
-          }
-        },
-      }
-    },
-  }
-}
 
 const google = (over = {}) => ({ provider: 'google', subject: '1234', email: 'Xavi.RAG@gmail.com', name: 'Xavi Ramírez', ...over })
 

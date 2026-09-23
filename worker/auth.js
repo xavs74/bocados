@@ -18,6 +18,7 @@
  */
 
 import { deleteUser, exportUser, signIn } from './accounts.js'
+import { forgetUser } from './sync.js'
 
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
@@ -63,6 +64,8 @@ export async function handleAuth(request, env) {
     }
 
     if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
+    // The rows that travelled between devices go with the account.
+    await forgetUser(env.DB, session.uid)
     await deleteUser(env.DB, session.uid)
     // The session goes with the account, so the device is signed out too.
     return json({ deleted: true }, 200, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
