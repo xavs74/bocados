@@ -140,8 +140,37 @@ export const redirectUri = (url) => `${url.origin}/auth/callback`
 export function readIdToken(token) {
   const payload = String(token || '').split('.')[1]
   if (!payload) return null
+  const text = fromBase64(payload.replace(/-/g, '+').replace(/_/g, '/'))
+  if (text === null) return null
   try {
-    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Base64 of the text's own bytes. Going through btoa/atob instead would read
+ * each byte as a character: "Ramírez" comes back as "RamÃ­rez", and a name
+ * outside Latin-1 makes btoa throw, which would stop sign-in altogether.
+ */
+function toBase64(text) {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
+function fromBase64(base64) {
+  let binary
+  try {
+    binary = atob(base64)
+  } catch {
+    return null
+  }
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
   } catch {
     return null
   }
@@ -167,13 +196,13 @@ function clearCookie(name) {
 /** value.signature, so what comes back can be trusted without storing it. */
 export async function sign(value, secret) {
   const mac = await hmac(value, secret)
-  return `${btoa(value).replace(/=+$/, '')}.${mac}`
+  return `${toBase64(value).replace(/=+$/, '')}.${mac}`
 }
 
 export async function open(signed, secret) {
   const dot = String(signed).lastIndexOf('.')
   if (dot < 1) return null
-  const value = decode(signed.slice(0, dot))
+  const value = fromBase64(signed.slice(0, dot))
   if (value === null) return null
   return (await equal(await hmac(value, secret), signed.slice(dot + 1))) ? value : null
 }
@@ -187,14 +216,6 @@ async function hmac(value, secret) {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))
   return [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-function decode(base64) {
-  try {
-    return atob(base64)
-  } catch {
-    return null
-  }
 }
 
 /** Compared through a digest so the time it takes says nothing about the value. */

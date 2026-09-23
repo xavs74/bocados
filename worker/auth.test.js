@@ -20,6 +20,13 @@ describe('signed values', () => {
     expect(await open(await sign('hola', 'otro secreto'), SECRET)).toBeNull()
   })
 
+  it('keeps accents and names beyond Latin-1', async () => {
+    for (const name of ['Xavi Ramírez', 'Begoña', '李雷', 'Ünal Şahin']) {
+      const signed = await sign(JSON.stringify({ name }), SECRET)
+      expect(JSON.parse(await open(signed, SECRET)).name).toBe(name)
+    }
+  })
+
   it('refuses nonsense', async () => {
     expect(await open('', SECRET)).toBeNull()
     expect(await open('sin-punto', SECRET)).toBeNull()
@@ -48,6 +55,12 @@ describe('readIdToken', () => {
   it('reads the claims', () => {
     const payload = btoa(JSON.stringify({ sub: '123', email: 'xavi@example.com', name: 'Xavi' }))
     expect(readIdToken(`cabecera.${payload}.firma`)).toEqual({ sub: '123', email: 'xavi@example.com', name: 'Xavi' })
+  })
+
+  it('reads accents as Google sends them', () => {
+    // Google base64-encodes the UTF-8 bytes of the claims.
+    const payload = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({ sub: '1', email: 'x@y.z', name: 'Xavi Ramírez' }))))
+    expect(readIdToken(`cabecera.${payload}.firma`).name).toBe('Xavi Ramírez')
   })
 
   it('is null for anything else', () => {
