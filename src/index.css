@@ -263,6 +263,39 @@ a {
 }
 
 /* Shown in place of the screens when the database will not open. */
+.check-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0;
+  font-size: 0.92rem;
+}
+
+/* Specific enough to beat the rule that stretches text boxes to full width. */
+.check-line input[type='checkbox'] {
+  flex: none;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  min-height: 22px;
+  margin: 1px 0 0;
+  padding: 0;
+  accent-color: var(--brand);
+}
+
+.privacy-list {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.privacy p {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
 .db-banner {
   grid-area: main;
   align-self: start;

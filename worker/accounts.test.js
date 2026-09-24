@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fakeD1 } from './fakeD1.js'
-import { cleanEmail, deleteUser, exportUser, getUser, signIn } from './accounts.js'
+import { cleanEmail, deleteUser, exportUser, getUser, recordConsent, signIn, withdrawConsent } from './accounts.js'
 
 const google = (over = {}) => ({ provider: 'google', subject: '1234', email: 'Xavi.RAG@gmail.com', name: 'Xavi Ramírez', ...over })
 
@@ -93,5 +93,44 @@ describe('cleanEmail', () => {
   it('trims and lowercases', () => {
     expect(cleanEmail('  Xavi.RAG@Gmail.com ')).toBe('xavi.rag@gmail.com')
     expect(cleanEmail(undefined)).toBe('')
+  })
+})
+
+describe('consent', () => {
+  let db
+  beforeEach(() => {
+    db = fakeD1()
+  })
+
+  it('is not given until someone gives it', async () => {
+    const user = await signIn(db, google())
+    expect(user.consent_at ?? null).toBeNull()
+  })
+
+  it('is written down with the version of the policy that was shown', async () => {
+    const user = await signIn(db, google())
+    const after = await recordConsent(db, user.id, '2', '2026-09-24T10:00:00.000Z')
+    expect(after.consent_at).toBe('2026-09-24T10:00:00.000Z')
+    expect(after.consent_version).toBe('2')
+  })
+
+  it('can be taken back', async () => {
+    const user = await signIn(db, google())
+    await recordConsent(db, user.id, '1')
+    await withdrawConsent(db, user.id)
+    expect((await getUser(db, user.id)).consent_at).toBeNull()
+  })
+
+  it('travels with everything else when someone takes their data', async () => {
+    const user = await signIn(db, google())
+    await recordConsent(db, user.id, '1', '2026-09-24T10:00:00.000Z')
+    expect((await exportUser(db, user.id)).cuenta.consent_at).toBe('2026-09-24T10:00:00.000Z')
+  })
+
+  it('goes when the account goes', async () => {
+    const user = await signIn(db, google())
+    await recordConsent(db, user.id, '1')
+    await deleteUser(db, user.id)
+    expect(await getUser(db, user.id)).toBeNull()
   })
 })

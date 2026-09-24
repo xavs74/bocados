@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
 import { Account } from './screens/Account'
+import { Privacy } from './screens/Privacy'
 import { Progress } from './screens/Progress'
 import { Plan } from './screens/Plan'
 import { Goals } from './screens/Goals'
@@ -17,7 +18,7 @@ import { ConfirmHost } from './components/ConfirmHost'
 const TABS = ['today', 'plan', 'progress', 'goals'] as const
 type Tab = (typeof TABS)[number]
 /** Screens reached from Objetivos rather than the tab bar, with their own address. */
-const INSIDE_GOALS = ['foods', 'cuenta'] as const
+const INSIDE_GOALS = ['foods', 'cuenta', 'privacidad'] as const
 type Screen = Tab | (typeof INSIDE_GOALS)[number]
 
 function screenFromHash(): Screen {
@@ -97,6 +98,7 @@ export default function App() {
           {screen === 'progress' && <Progress />}
           {screen === 'foods' && <Foods />}
           {screen === 'cuenta' && <Account />}
+          {screen === 'privacidad' && <Privacy />}
           {screen === 'goals' && <Goals />}
         </div>
       </main>

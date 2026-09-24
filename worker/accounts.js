@@ -60,6 +60,20 @@ export async function getUser(db, id) {
   return (await db.prepare('SELECT * FROM users WHERE id = ?').bind(String(id)).first()) ?? null
 }
 
+/**
+ * Writes down that someone agreed to their food and weight being kept. Only
+ * after this does anything of theirs travel: see the account screen.
+ */
+export async function recordConsent(db, id, version, now = new Date().toISOString()) {
+  await db.prepare('UPDATE users SET consent_at = ?, consent_version = ? WHERE id = ?').bind(now, String(version), String(id)).run()
+  return getUser(db, id)
+}
+
+/** Withdrawn consent stops sync; the data itself is removed separately. */
+export async function withdrawConsent(db, id) {
+  await db.prepare('UPDATE users SET consent_at = NULL, consent_version = NULL WHERE id = ?').bind(String(id)).run()
+}
+
 /** Everything the server holds about someone, for them to take away. */
 export async function exportUser(db, id) {
   const user = await getUser(db, id)

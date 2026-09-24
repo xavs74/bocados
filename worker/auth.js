@@ -17,7 +17,7 @@
  * read rather than verified again.
  */
 
-import { deleteUser, exportUser, signIn } from './accounts.js'
+import { deleteUser, exportUser, getUser, recordConsent, signIn, withdrawConsent } from './accounts.js'
 import { forgetUser } from './sync.js'
 
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -28,7 +28,7 @@ const STATE_COOKIE = 'bocados_estado'
 export const SESSION_SECONDS = 60 * 60 * 24 * 30
 const STATE_SECONDS = 600
 
-const PATHS = ['/auth/google', '/auth/callback', '/auth/yo', '/auth/salir', '/auth/exportar', '/auth/borrar']
+const PATHS = ['/auth/google', '/auth/callback', '/auth/yo', '/auth/salir', '/auth/exportar', '/auth/borrar', '/auth/consentimiento']
 
 export function isAuthPath(pathname) {
   return PATHS.includes(pathname)
@@ -50,6 +50,26 @@ export async function handleAuth(request, env) {
   if (url.pathname === '/auth/salir') {
     if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
     return json({ signedIn: false }, 200, { 'Set-Cookie': clearCookie(SESSION_COOKIE) })
+  }
+
+  if (url.pathname === '/auth/consentimiento') {
+    const session = await readSession(request, env)
+    if (!session?.uid) return json({ error: 'No has entrado' }, 401)
+    if (!env.DB) return json({ error: 'La base de datos de cuentas no está configurada' }, 503)
+
+    if (request.method === 'GET') {
+      const user = await getUser(env.DB, session.uid)
+      return json({ consentAt: user?.consent_at ?? null, version: user?.consent_version ?? null })
+    }
+    if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
+
+    const body = await request.json().catch(() => ({}))
+    if (body?.accepted === false) {
+      await withdrawConsent(env.DB, session.uid)
+      return json({ consentAt: null, version: null })
+    }
+    const user = await recordConsent(env.DB, session.uid, body?.version ?? '1')
+    return json({ consentAt: user?.consent_at ?? null, version: user?.consent_version ?? null })
   }
 
   if (url.pathname === '/auth/exportar' || url.pathname === '/auth/borrar') {
