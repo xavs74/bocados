@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Onboarding } from './components/Onboarding'
 import { db, dbError } from './db'
 import { useDbStatus, useGoalsState } from './hooks'
+import { startSync } from './lib/syncRunner'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSwipeTabs } from './lib/useSwipeTabs'
 import { Foods } from './screens/Foods'
@@ -44,6 +45,11 @@ export default function App() {
     return true
   }, [])
   useSwipeTabs(mainRef, innerRef, swipe)
+
+  // Syncing does nothing until this device has been told to; see the account screen.
+  useEffect(() => {
+    void startSync()
+  }, [])
 
   useEffect(() => {
     const onHash = () => setScreen(screenFromHash())

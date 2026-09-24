@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fakeD1 } from './fakeD1.js'
-import { LIMITS, checkItems, forgetUser, pull, push } from './sync.js'
+import { LIMITS, accountSummary, checkItems, forgetUser, pull, push } from './sync.js'
 
 const XAVI = 'u-xavi'
 const MADRE = 'u-madre'
@@ -174,5 +174,28 @@ describe('forgetUser', () => {
     // The count starts again, so a device that comes back gets everything.
     await send(db, XAVI, [change('f9', 3000)])
     expect((await pull(db, XAVI, 0)).items.map((i) => i.uid)).toEqual(['f9'])
+  })
+})
+
+describe('accountSummary', () => {
+  it('says how much is there, and how many days of eating', async () => {
+    const db = fakeD1()
+    await send(db, XAVI, [
+      change('f1', 1000),
+      change('e1', 1001, { date: '2026-09-20', grams: 80 }, 'entry'),
+      change('e2', 1002, { date: '2026-09-20', grams: 50 }, 'entry'),
+      change('e3', 1003, { date: '2026-09-21', grams: 90 }, 'entry'),
+    ])
+
+    expect(await accountSummary(db, XAVI)).toEqual({ rows: 4, days: 2 })
+    expect(await accountSummary(db, MADRE)).toEqual({ rows: 0, days: 0 })
+  })
+
+  it('does not count what was deleted', async () => {
+    const db = fakeD1()
+    await send(db, XAVI, [change('f1', 1000), change('e1', 1001, { date: '2026-09-20' }, 'entry')])
+    await send(db, XAVI, [{ kind: 'entry', uid: 'e1', updatedAt: 2000, deleted: true }])
+
+    expect(await accountSummary(db, XAVI)).toEqual({ rows: 1, days: 0 })
   })
 })

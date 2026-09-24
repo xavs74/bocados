@@ -111,14 +111,28 @@ export async function pull(db, userId, since) {
   }
 }
 
+/**
+ * How much the account holds, without handing any of it over. It is what the
+ * first sign-in on a device needs: whether there is anything here at all, and
+ * how many days of eating it adds up to.
+ */
+export async function accountSummary(db, userId) {
+  const row = await db
+    .prepare(`SELECT COUNT(*) AS rows, COUNT(DISTINCT CASE WHEN kind = 'entry' THEN json_extract(data, '$.date') END) AS days FROM items WHERE user_id = ? AND deleted = 0`)
+    .bind(userId)
+    .first()
+  return { rows: row?.rows ?? 0, days: row?.days ?? 0 }
+}
+
 /** Removes everything the account has stored, for deleting the account. */
 export async function forgetUser(db, userId) {
   await db.batch([db.prepare('DELETE FROM items WHERE user_id = ?').bind(userId), db.prepare('DELETE FROM sync_seq WHERE user_id = ?').bind(userId)])
 }
 
 export async function handleSync(request, env, session) {
-  if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
   if (!env.DB) return json({ error: 'El servidor no tiene base de datos' }, 503)
+  if (request.method === 'GET') return json(await accountSummary(env.DB, session.uid))
+  if (request.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
 
   const length = Number(request.headers.get('Content-Length') ?? 0)
   if (length > LIMITS.body) return json({ error: 'Demasiados datos de una vez' }, 413)
