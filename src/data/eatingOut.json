@@ -1,0 +1,1162 @@
+[
+ {
+  "name": "Comida fuera (estimada)",
+  "group": "Sin mirar la carta",
+  "kcal": 200,
+  "carbs": 22,
+  "protein": 9.5,
+  "fat": 8,
+  "servings": [
+   {
+    "label": "1 comida ligera",
+    "grams": 200
+   },
+   {
+    "label": "1 comida normal",
+    "grams": 350
+   },
+   {
+    "label": "1 comida copiosa",
+    "grams": 500
+   }
+  ]
+ },
+ {
+  "name": "Patatas bravas",
+  "group": "Tapas y raciones",
+  "kcal": 190,
+  "carbs": 22,
+  "protein": 2.5,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 250
+   },
+   {
+    "label": "1 media ración",
+    "grams": 130
+   }
+  ]
+ },
+ {
+  "name": "Croquetas de jamón",
+  "group": "Tapas y raciones",
+  "kcal": 240,
+  "carbs": 20,
+  "protein": 8,
+  "fat": 14,
+  "servings": [
+   {
+    "label": "1 croqueta",
+    "grams": 35
+   },
+   {
+    "label": "1 ración (6)",
+    "grams": 210
+   }
+  ]
+ },
+ {
+  "name": "Tortilla de patatas",
+  "group": "Tapas y raciones",
+  "kcal": 195,
+  "carbs": 15,
+  "protein": 6,
+  "fat": 12,
+  "servings": [
+   {
+    "label": "1 pincho",
+    "grams": 125
+   },
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Calamares a la romana",
+  "group": "Tapas y raciones",
+  "kcal": 240,
+  "carbs": 18,
+  "protein": 13,
+  "fat": 13,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Ensaladilla rusa",
+  "group": "Tapas y raciones",
+  "kcal": 190,
+  "carbs": 10,
+  "protein": 4,
+  "fat": 14,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   },
+   {
+    "label": "1 tapa",
+    "grams": 100
+   }
+  ]
+ },
+ {
+  "name": "Jamón ibérico",
+  "group": "Tapas y raciones",
+  "kcal": 330,
+  "carbs": 0.5,
+  "protein": 30,
+  "fat": 23,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 80
+   },
+   {
+    "label": "1 loncha",
+    "grams": 12
+   }
+  ]
+ },
+ {
+  "name": "Queso curado (ración)",
+  "group": "Tapas y raciones",
+  "kcal": 380,
+  "carbs": 1,
+  "protein": 26,
+  "fat": 30,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 80
+   }
+  ]
+ },
+ {
+  "name": "Gambas al ajillo",
+  "group": "Tapas y raciones",
+  "kcal": 150,
+  "carbs": 1,
+  "protein": 17,
+  "fat": 9,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Pulpo a la gallega",
+  "group": "Tapas y raciones",
+  "kcal": 145,
+  "carbs": 7,
+  "protein": 14,
+  "fat": 7,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Chorizo o salchichón (ración)",
+  "group": "Tapas y raciones",
+  "kcal": 400,
+  "carbs": 1,
+  "protein": 22,
+  "fat": 34,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 80
+   }
+  ]
+ },
+ {
+  "name": "Albóndigas en salsa",
+  "group": "Tapas y raciones",
+  "kcal": 190,
+  "carbs": 8,
+  "protein": 12,
+  "fat": 12,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Alitas de pollo",
+  "group": "Tapas y raciones",
+  "kcal": 250,
+  "carbs": 3,
+  "protein": 22,
+  "fat": 17,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Nachos con queso",
+  "group": "Tapas y raciones",
+  "kcal": 320,
+  "carbs": 30,
+  "protein": 9,
+  "fat": 18,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Aceitunas",
+  "group": "Tapas y raciones",
+  "kcal": 145,
+  "carbs": 4,
+  "protein": 1,
+  "fat": 14,
+  "servings": [
+   {
+    "label": "1 tapa",
+    "grams": 60
+   }
+  ]
+ },
+ {
+  "name": "Pan con tomate",
+  "group": "Tapas y raciones",
+  "kcal": 230,
+  "carbs": 35,
+  "protein": 6,
+  "fat": 7,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 100
+   },
+   {
+    "label": "1 tostada",
+    "grams": 60
+   }
+  ]
+ },
+ {
+  "name": "Pimientos de Padrón",
+  "group": "Tapas y raciones",
+  "kcal": 90,
+  "carbs": 6,
+  "protein": 2,
+  "fat": 6,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Boquerones en vinagre",
+  "group": "Tapas y raciones",
+  "kcal": 175,
+  "carbs": 1,
+  "protein": 17,
+  "fat": 11,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 100
+   }
+  ]
+ },
+ {
+  "name": "Empanada gallega",
+  "group": "Tapas y raciones",
+  "kcal": 260,
+  "carbs": 28,
+  "protein": 9,
+  "fat": 12,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Montadito de lomo",
+  "group": "Tapas y raciones",
+  "kcal": 250,
+  "carbs": 28,
+  "protein": 14,
+  "fat": 9,
+  "servings": [
+   {
+    "label": "1 montadito",
+    "grams": 110
+   }
+  ]
+ },
+ {
+  "name": "Patatas fritas (guarnición)",
+  "group": "Tapas y raciones",
+  "kcal": 290,
+  "carbs": 36,
+  "protein": 4,
+  "fat": 14,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Pan de la mesa",
+  "group": "Tapas y raciones",
+  "kcal": 270,
+  "carbs": 52,
+  "protein": 9,
+  "fat": 2,
+  "servings": [
+   {
+    "label": "1 rebanada",
+    "grams": 30
+   },
+   {
+    "label": "1 panecillo",
+    "grams": 60
+   }
+  ]
+ },
+ {
+  "name": "Bocadillo de tortilla",
+  "group": "Bocadillos",
+  "kcal": 230,
+  "carbs": 26,
+  "protein": 8,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 bocadillo",
+    "grams": 250
+   },
+   {
+    "label": "1 medio",
+    "grams": 125
+   }
+  ]
+ },
+ {
+  "name": "Bocadillo de jamón serrano",
+  "group": "Bocadillos",
+  "kcal": 270,
+  "carbs": 36,
+  "protein": 15,
+  "fat": 7,
+  "servings": [
+   {
+    "label": "1 bocadillo",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Bocadillo de calamares",
+  "group": "Bocadillos",
+  "kcal": 250,
+  "carbs": 32,
+  "protein": 11,
+  "fat": 9,
+  "servings": [
+   {
+    "label": "1 bocadillo",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Bocadillo de lomo con queso",
+  "group": "Bocadillos",
+  "kcal": 280,
+  "carbs": 28,
+  "protein": 17,
+  "fat": 11,
+  "servings": [
+   {
+    "label": "1 bocadillo",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Bocadillo de chorizo",
+  "group": "Bocadillos",
+  "kcal": 320,
+  "carbs": 28,
+  "protein": 14,
+  "fat": 17,
+  "servings": [
+   {
+    "label": "1 bocadillo",
+    "grams": 220
+   }
+  ]
+ },
+ {
+  "name": "Sándwich mixto",
+  "group": "Bocadillos",
+  "kcal": 280,
+  "carbs": 26,
+  "protein": 14,
+  "fat": 13,
+  "servings": [
+   {
+    "label": "1 sándwich",
+    "grams": 160
+   }
+  ]
+ },
+ {
+  "name": "Sándwich vegetal con atún",
+  "group": "Bocadillos",
+  "kcal": 230,
+  "carbs": 22,
+  "protein": 10,
+  "fat": 11,
+  "servings": [
+   {
+    "label": "1 sándwich",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Perrito caliente",
+  "group": "Bocadillos",
+  "kcal": 270,
+  "carbs": 24,
+  "protein": 10,
+  "fat": 15,
+  "servings": [
+   {
+    "label": "1 perrito",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Pizza margarita",
+  "group": "Pizza, burger y kebab",
+  "kcal": 265,
+  "carbs": 31,
+  "protein": 11,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 110
+   },
+   {
+    "label": "1 mediana entera",
+    "grams": 450
+   }
+  ]
+ },
+ {
+  "name": "Pizza con carne o barbacoa",
+  "group": "Pizza, burger y kebab",
+  "kcal": 285,
+  "carbs": 29,
+  "protein": 13,
+  "fat": 13,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 120
+   },
+   {
+    "label": "1 mediana entera",
+    "grams": 500
+   }
+  ]
+ },
+ {
+  "name": "Pizza cuatro quesos",
+  "group": "Pizza, burger y kebab",
+  "kcal": 300,
+  "carbs": 28,
+  "protein": 14,
+  "fat": 15,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 120
+   },
+   {
+    "label": "1 mediana entera",
+    "grams": 480
+   }
+  ]
+ },
+ {
+  "name": "Hamburguesa con queso",
+  "group": "Pizza, burger y kebab",
+  "kcal": 250,
+  "carbs": 20,
+  "protein": 13,
+  "fat": 13,
+  "servings": [
+   {
+    "label": "1 hamburguesa",
+    "grams": 220
+   }
+  ]
+ },
+ {
+  "name": "Hamburguesa doble con bacon",
+  "group": "Pizza, burger y kebab",
+  "kcal": 290,
+  "carbs": 17,
+  "protein": 16,
+  "fat": 18,
+  "servings": [
+   {
+    "label": "1 hamburguesa",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Hamburguesa de pollo crujiente",
+  "group": "Pizza, burger y kebab",
+  "kcal": 260,
+  "carbs": 24,
+  "protein": 13,
+  "fat": 12,
+  "servings": [
+   {
+    "label": "1 hamburguesa",
+    "grams": 230
+   }
+  ]
+ },
+ {
+  "name": "Patatas de fast food",
+  "group": "Pizza, burger y kebab",
+  "kcal": 310,
+  "carbs": 40,
+  "protein": 4,
+  "fat": 15,
+  "servings": [
+   {
+    "label": "1 pequeñas",
+    "grams": 80
+   },
+   {
+    "label": "1 medianas",
+    "grams": 115
+   },
+   {
+    "label": "1 grandes",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Kebab durum de ternera",
+  "group": "Pizza, burger y kebab",
+  "kcal": 215,
+  "carbs": 20,
+  "protein": 12,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 durum",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Kebab en pan de pita",
+  "group": "Pizza, burger y kebab",
+  "kcal": 230,
+  "carbs": 22,
+  "protein": 13,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 kebab",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Nuggets de pollo",
+  "group": "Pizza, burger y kebab",
+  "kcal": 290,
+  "carbs": 17,
+  "protein": 15,
+  "fat": 18,
+  "servings": [
+   {
+    "label": "1 unidad",
+    "grams": 17
+   },
+   {
+    "label": "1 ración (6)",
+    "grams": 100
+   }
+  ]
+ },
+ {
+  "name": "Burrito de carne",
+  "group": "Pizza, burger y kebab",
+  "kcal": 230,
+  "carbs": 26,
+  "protein": 11,
+  "fat": 9,
+  "servings": [
+   {
+    "label": "1 burrito",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Taco",
+  "group": "Pizza, burger y kebab",
+  "kcal": 220,
+  "carbs": 20,
+  "protein": 11,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 taco",
+    "grams": 90
+   }
+  ]
+ },
+ {
+  "name": "Paella o arroz de marisco",
+  "group": "Platos",
+  "kcal": 160,
+  "carbs": 20,
+  "protein": 8,
+  "fat": 5,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Arroz a la cubana",
+  "group": "Platos",
+  "kcal": 180,
+  "carbs": 28,
+  "protein": 5,
+  "fat": 5,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Macarrones con tomate",
+  "group": "Platos",
+  "kcal": 150,
+  "carbs": 22,
+  "protein": 5,
+  "fat": 4,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Lasaña de carne",
+  "group": "Platos",
+  "kcal": 165,
+  "carbs": 15,
+  "protein": 9,
+  "fat": 8,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Espaguetis carbonara",
+  "group": "Platos",
+  "kcal": 210,
+  "carbs": 22,
+  "protein": 8,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Lentejas o potaje",
+  "group": "Platos",
+  "kcal": 130,
+  "carbs": 14,
+  "protein": 7,
+  "fat": 5,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 350
+   }
+  ]
+ },
+ {
+  "name": "Cocido o puchero",
+  "group": "Platos",
+  "kcal": 140,
+  "carbs": 12,
+  "protein": 9,
+  "fat": 6,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 400
+   }
+  ]
+ },
+ {
+  "name": "Entrecot o solomillo a la plancha",
+  "group": "Platos",
+  "kcal": 230,
+  "carbs": 0,
+  "protein": 25,
+  "fat": 15,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Pollo asado",
+  "group": "Platos",
+  "kcal": 210,
+  "carbs": 0,
+  "protein": 24,
+  "fat": 13,
+  "servings": [
+   {
+    "label": "1 cuarto",
+    "grams": 300
+   },
+   {
+    "label": "1 medio",
+    "grams": 550
+   }
+  ]
+ },
+ {
+  "name": "Merluza a la plancha",
+  "group": "Platos",
+  "kcal": 100,
+  "carbs": 0,
+  "protein": 20,
+  "fat": 2,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Salmón a la plancha",
+  "group": "Platos",
+  "kcal": 200,
+  "carbs": 0,
+  "protein": 22,
+  "fat": 12,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 180
+   }
+  ]
+ },
+ {
+  "name": "Ensalada mixta con atún",
+  "group": "Platos",
+  "kcal": 110,
+  "carbs": 5,
+  "protein": 7,
+  "fat": 7,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Ensalada César",
+  "group": "Platos",
+  "kcal": 150,
+  "carbs": 8,
+  "protein": 8,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Revuelto de setas o gambas",
+  "group": "Platos",
+  "kcal": 150,
+  "carbs": 2,
+  "protein": 12,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 200
+   }
+  ]
+ },
+ {
+  "name": "Verduras a la plancha",
+  "group": "Platos",
+  "kcal": 80,
+  "carbs": 8,
+  "protein": 2,
+  "fat": 4,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Sopa o caldo",
+  "group": "Platos",
+  "kcal": 40,
+  "carbs": 5,
+  "protein": 2,
+  "fat": 1,
+  "servings": [
+   {
+    "label": "1 plato",
+    "grams": 300
+   }
+  ]
+ },
+ {
+  "name": "Menú del día completo",
+  "group": "Platos",
+  "kcal": 150,
+  "carbs": 15,
+  "protein": 7,
+  "fat": 6,
+  "servings": [
+   {
+    "label": "1 menú",
+    "grams": 700
+   }
+  ]
+ },
+ {
+  "name": "Caña de cerveza",
+  "group": "Bebidas",
+  "kcal": 43,
+  "carbs": 3.6,
+  "protein": 0.5,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 caña",
+    "grams": 200
+   },
+   {
+    "label": "1 tercio",
+    "grams": 330
+   },
+   {
+    "label": "1 pinta",
+    "grams": 500
+   }
+  ],
+  "alcohol": 3.9
+ },
+ {
+  "name": "Cerveza sin alcohol",
+  "group": "Bebidas",
+  "kcal": 22,
+  "carbs": 5,
+  "protein": 0.4,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 caña",
+    "grams": 200
+   },
+   {
+    "label": "1 tercio",
+    "grams": 330
+   }
+  ]
+ },
+ {
+  "name": "Copa de vino",
+  "group": "Bebidas",
+  "kcal": 83,
+  "carbs": 2.6,
+  "protein": 0.1,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 copa",
+    "grams": 150
+   }
+  ],
+  "alcohol": 10.4
+ },
+ {
+  "name": "Refresco con azúcar",
+  "group": "Bebidas",
+  "kcal": 42,
+  "carbs": 10.6,
+  "protein": 0,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 vaso",
+    "grams": 250
+   },
+   {
+    "label": "1 lata",
+    "grams": 330
+   }
+  ]
+ },
+ {
+  "name": "Refresco sin azúcar",
+  "group": "Bebidas",
+  "kcal": 1,
+  "carbs": 0,
+  "protein": 0,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 vaso",
+    "grams": 250
+   },
+   {
+    "label": "1 lata",
+    "grams": 330
+   }
+  ]
+ },
+ {
+  "name": "Zumo de naranja natural",
+  "group": "Bebidas",
+  "kcal": 45,
+  "carbs": 10,
+  "protein": 0.7,
+  "fat": 0.2,
+  "servings": [
+   {
+    "label": "1 vaso",
+    "grams": 250
+   }
+  ]
+ },
+ {
+  "name": "Café con leche",
+  "group": "Bebidas",
+  "kcal": 55,
+  "carbs": 5,
+  "protein": 3,
+  "fat": 2,
+  "servings": [
+   {
+    "label": "1 taza",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Cortado",
+  "group": "Bebidas",
+  "kcal": 35,
+  "carbs": 2.5,
+  "protein": 2,
+  "fat": 2,
+  "servings": [
+   {
+    "label": "1 taza",
+    "grams": 90
+   }
+  ]
+ },
+ {
+  "name": "Gin-tonic o cubata",
+  "group": "Bebidas",
+  "kcal": 90,
+  "carbs": 6,
+  "protein": 0,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 copa",
+    "grams": 250
+   }
+  ],
+  "alcohol": 10.5
+ },
+ {
+  "name": "Sangría o tinto de verano",
+  "group": "Bebidas",
+  "kcal": 75,
+  "carbs": 8,
+  "protein": 0,
+  "fat": 0,
+  "servings": [
+   {
+    "label": "1 vaso",
+    "grams": 250
+   }
+  ],
+  "alcohol": 7.5
+ },
+ {
+  "name": "Tarta de queso",
+  "group": "Postres",
+  "kcal": 320,
+  "carbs": 28,
+  "protein": 6,
+  "fat": 20,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 120
+   }
+  ]
+ },
+ {
+  "name": "Flan con nata",
+  "group": "Postres",
+  "kcal": 180,
+  "carbs": 22,
+  "protein": 4,
+  "fat": 8,
+  "servings": [
+   {
+    "label": "1 unidad",
+    "grams": 130
+   }
+  ]
+ },
+ {
+  "name": "Helado",
+  "group": "Postres",
+  "kcal": 200,
+  "carbs": 24,
+  "protein": 3.5,
+  "fat": 10,
+  "servings": [
+   {
+    "label": "1 bola",
+    "grams": 55
+   },
+   {
+    "label": "2 bolas",
+    "grams": 110
+   }
+  ]
+ },
+ {
+  "name": "Brownie con helado",
+  "group": "Postres",
+  "kcal": 330,
+  "carbs": 38,
+  "protein": 5,
+  "fat": 17,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 150
+   }
+  ]
+ },
+ {
+  "name": "Churros",
+  "group": "Postres",
+  "kcal": 350,
+  "carbs": 40,
+  "protein": 6,
+  "fat": 18,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 100
+   }
+  ]
+ },
+ {
+  "name": "Tarta de chocolate",
+  "group": "Postres",
+  "kcal": 380,
+  "carbs": 42,
+  "protein": 5,
+  "fat": 21,
+  "servings": [
+   {
+    "label": "1 porción",
+    "grams": 120
+   }
+  ]
+ },
+ {
+  "name": "Fruta de postre",
+  "group": "Postres",
+  "kcal": 50,
+  "carbs": 12,
+  "protein": 0.6,
+  "fat": 0.2,
+  "servings": [
+   {
+    "label": "1 ración",
+    "grams": 150
+   }
+  ]
+ }
+]

@@ -21,6 +21,9 @@ export const OWN_CATEGORY = 'Mis alimentos'
 /** Products copied from Open Food Facts; not part of the built-in list. */
 export const SUPERMARKET_CATEGORY = 'Supermercado'
 
+/** Dishes copied from the eating-out list; not part of the built-in one. */
+export const EATING_OUT_CATEGORY = 'Fuera de casa'
+
 /** Foods that mirror a recipe. */
 export const RECIPE_CATEGORY = 'Recetas'
 

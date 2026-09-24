@@ -36,6 +36,11 @@ export interface Food extends Nutrients, Synced {
   servings: Serving[]
   /** One of CATEGORIES for built-in foods; missing for foods people create. */
   category?: string
+  /**
+   * Grams of alcohol per 100 g, for drinks. Their calories come from it rather
+   * than from the macros, so without it a beer looks like a mistake.
+   */
+  alcohol?: number
   /** Set for products copied from Open Food Facts. */
   barcode?: string
   source?: string

@@ -109,13 +109,17 @@ export function onTarget(actualPct: number, targetPct: number): boolean {
   return Math.abs(actualPct - targetPct) <= SPLIT_TOLERANCE
 }
 
+/** A gram of alcohol carries this, which is why a beer's macros never add up. */
+export const KCAL_PER_ALCOHOL_GRAM = 7
+
 /**
  * Label kcal that disagree with the macros by more than this fraction are
- * probably a typo (fibre and rounding explain small gaps).
+ * probably a typo (fibre and rounding explain small gaps). Drinks say how much
+ * alcohol they carry, or every beer would look like one.
  */
-export function kcalLooksWrong(n: Nutrients): boolean {
+export function kcalLooksWrong(n: Nutrients & { alcohol?: number }): boolean {
   const k = macroKcal(n)
-  const fromMacros = k.carbs + k.protein + k.fat
+  const fromMacros = k.carbs + k.protein + k.fat + (n.alcohol ?? 0) * KCAL_PER_ALCOHOL_GRAM
   if (n.kcal === 0 && fromMacros === 0) return false
   return Math.abs(fromMacros - n.kcal) > Math.max(n.kcal, fromMacros) * 0.2 + 5
 }

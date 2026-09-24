@@ -1299,6 +1299,46 @@ input[type='range'] {
   text-align: left;
 }
 
+/* Ate out and has no idea: three sizes, one tap each. */
+.eating-out {
+  padding: 0 18px 12px;
+}
+
+.guess-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.guess {
+  display: grid;
+  gap: 2px;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.guess strong {
+  font-weight: 650;
+}
+
+.guess .muted {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.guess:active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.eating-out .hint {
+  margin: 8px 0 0;
+}
+
 /* Lo de siempre: the row opens the amount, the round button logs it as last time. */
 .usual-row {
   display: flex;

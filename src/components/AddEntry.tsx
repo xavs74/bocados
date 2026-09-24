@@ -4,6 +4,7 @@ import { MEAL_LABEL, db, gramsOf, type Amount, type Food, type Meal } from '../d
 import { amountFrom, draftFrom, type AmountDraft } from '../lib/amount'
 import { categoryOf } from '../lib/categories'
 import { grams, kcal, matches, num } from '../lib/format'
+import { ESTIMATE, saveDish, searchDishes, type Dish } from '../lib/eatingOut'
 import { usualFoods, usualFrom, type UsualFood } from '../lib/usual'
 import { MIN_QUERY, productLabel, saveProduct, searchProducts, type Product } from '../lib/openFoodFacts'
 import { AmountEditor } from './AmountEditor'
@@ -219,6 +220,53 @@ interface SearchProps {
   usual?: { date: string; meal: Meal; onAdd: (f: Food, amount: Amount) => void }
 }
 
+/** Eating out, without describing the meal: three sizes, one tap each. */
+function EatingOutGuess({ onAdd }: { onAdd: (f: Food, amount: Amount) => void }) {
+  return (
+    <section className="eating-out" aria-label="Comí fuera">
+      <h3 className="group-title">¿Comiste fuera y no sabes qué poner?</h3>
+      <div className="guess-row">
+        {ESTIMATE.servings.map((serving) => (
+          <button
+            key={serving.label}
+            className="guess"
+            onClick={async () => onAdd(await saveDish(ESTIMATE), { quantity: 1, serving })}
+          >
+            <strong>{serving.label.replace(/^1 comida /, '')}</strong>
+            <span className="muted">{kcal((ESTIMATE.kcal * serving.grams) / 100)} kcal</span>
+          </button>
+        ))}
+      </div>
+      <p className="hint">Es una estimación: puedes cambiarla luego, o buscar el plato por su nombre.</p>
+    </section>
+  )
+}
+
+/** Typical dishes from a bar, a pizza place or a kebab, with typical portions. */
+function DishResults({ dishes, onPick, action = 'Añadir' }: { dishes: Dish[]; onPick: (f: Food) => void; action?: string }) {
+  if (!dishes.length) return null
+  return (
+    <section className="products">
+      <h3 className="group-title">
+        Fuera de casa <span className="muted">· valores aproximados</span>
+      </h3>
+      <ul className="food-list">
+        {dishes.map((dish) => (
+          <li key={dish.name}>
+            <button className="food-row" onClick={async () => onPick(await saveDish(dish))} title={`${action}: ${dish.name}`}>
+              <span className="food-name">{dish.name}</span>
+              <span className="food-meta">
+                {dish.servings[0] && `${dish.servings[0].label.replace(/^1\s+/, '')} · ${kcal((dish.kcal * dish.servings[0].grams) / 100)} kcal`}
+                <span className="muted"> · {dish.group.toLowerCase()}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef, autoFocus, usual }: SearchProps) {
   const foods = useLiveQuery(() => db.foods.orderBy('name').toArray(), [])
   const usualDate = usual?.date
@@ -308,6 +356,7 @@ export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef,
           {usual && !query.trim() && usualList.length > 0 && (
             <UsualGroup meal={usual.meal} items={usualList} onPick={onPick} onAdd={usual.onAdd} />
           )}
+          {usual && !query.trim() && <EatingOutGuess onAdd={usual.onAdd} />}
           {recent.length > 0 && <FoodGroup title="Recientes" foods={recent} offset={0} active={query.trim() || navigated ? activeIndex : -1} onPick={onPick} />}
           {rest.length > 0 ? (
             <FoodGroup
@@ -321,6 +370,7 @@ export function FoodSearch({ query, onQuery, onPick, onCreate, onScan, inputRef,
           ) : (
             <p className="empty">Ningún alimento coincide con «{query}».</p>
           )}
+          <DishResults dishes={searchDishes(query)} onPick={onPick} />
           <ProductResults query={query} onPick={onPick} />
         </div>
       )}
