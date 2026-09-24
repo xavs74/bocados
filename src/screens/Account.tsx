@@ -232,6 +232,9 @@ export function Account() {
 
   return (
     <div className="goals">
+      <a className="back-link" href="#/goals">
+        ‹ Objetivos
+      </a>
       <div className="page-head">
         <h1>Cuenta</h1>
       </div>
