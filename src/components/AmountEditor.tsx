@@ -1,5 +1,5 @@
 import { gramsOf, type Serving } from '../db'
-import { amountFrom, type AmountDraft } from '../lib/amount'
+import { amountFrom, switchUnit, type AmountDraft } from '../lib/amount'
 import { grams, kcal, num } from '../lib/format'
 import { scale, type Nutrients } from '../lib/nutrition'
 
@@ -37,7 +37,7 @@ export function AmountEditor({ draft, onChange, servings, per100, autoFocus }: P
         </label>
         <label className="field">
           <span>Unidad</span>
-          <select value={draft.unit} onChange={(e) => onChange({ ...draft, unit: Number(e.target.value) })}>
+          <select value={draft.unit} onChange={(e) => onChange(switchUnit(draft, servings, Number(e.target.value)))}>
             <option value={-1}>gramos</option>
             {servings.map((s, i) => (
               <option key={i} value={i}>
