@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+// The runner listens for the app coming back in front, which needs a document.
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { db, withoutTombstones } from '../db'
@@ -103,5 +105,41 @@ describe('when syncing happens', () => {
     await settle(60)
     expect(net.calls).toHaveLength(before)
     expect(getSyncStatus()).toEqual({ state: 'off' })
+  })
+
+  it('catches up when the app comes back in front', async () => {
+    await enableSync(true)
+    await settle()
+    const before = net.calls.length
+
+    // A phone does not reload when it is brought back from the background.
+    document.dispatchEvent(new Event('visibilitychange'))
+    await settle()
+
+    expect(net.calls.length).toBeGreaterThan(before)
+  })
+
+  it('catches up when the connection comes back', async () => {
+    await enableSync(true)
+    await settle()
+    const before = net.calls.length
+
+    window.dispatchEvent(new Event('online'))
+    await settle()
+
+    expect(net.calls.length).toBeGreaterThan(before)
+  })
+
+  it('listens no more once it is turned off', async () => {
+    await enableSync(true)
+    await settle()
+    await enableSync(false)
+    const before = net.calls.length
+
+    document.dispatchEvent(new Event('visibilitychange'))
+    window.dispatchEvent(new Event('online'))
+    await settle()
+
+    expect(net.calls).toHaveLength(before)
   })
 })

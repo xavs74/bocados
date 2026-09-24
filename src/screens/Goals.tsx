@@ -57,10 +57,12 @@ export function Goals() {
 
       <MealsCard />
 
-      <section className="card pad">
+      {/* Side by side on a laptop: one card per row left them nearly empty. */}
+      <div className="goals-grid">
+        <section className="card pad">
         <h2 className="section-title">Cuenta</h2>
         <p className="hint">
-          Con una cuenta, lo que apuntas aparece también en tus otros móviles. Sin ella, Bocados funciona igual y todo se queda aquí. Qué se guarda y por qué, en la{' '}
+          Con una cuenta, lo que apuntas aparece también en tus otros dispositivos. Sin ella, Bocados funciona igual y todo se queda aquí. Qué se guarda y por qué, en la{' '}
           <a href="#/privacidad">política de privacidad</a>.
         </p>
         <a className="btn ghost block" href="#/cuenta">
@@ -79,7 +81,7 @@ export function Goals() {
       <section className="card pad">
         <h2 className="section-title">Tus datos</h2>
         <p className="hint">
-          Todo se guarda solo en este dispositivo. Exporta una copia para no perder nada o para pasarla a otro móvil u ordenador, y después impórtala allí.
+          Todo se guarda solo en este dispositivo. Exporta una copia para no perder nada o para pasarla a otro dispositivo, y después impórtala allí.
         </p>
         <div className="footer-row">
           <button className="btn ghost grow" onClick={exportBackup}>
@@ -106,6 +108,7 @@ export function Goals() {
           </p>
         )}
       </section>
+      </div>
     </div>
   )
 }

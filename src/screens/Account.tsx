@@ -129,7 +129,7 @@ export function Account() {
       await enableSync(false)
       setConsent('')
       setEnabled(false)
-      setMessage('Ya no se sincroniza nada. Lo que tienes aquí sigue en este móvil.')
+      setMessage('Ya no se sincroniza nada. Lo que tienes aquí sigue en este dispositivo.')
     } finally {
       setBusy(false)
     }
@@ -146,7 +146,7 @@ export function Account() {
       await enableSync(true)
       setEnabled(true)
       await syncNow()
-      setMessage(keepAccount ? 'Este móvil ahora tiene lo de tu cuenta.' : 'Se han juntado los dos.')
+      setMessage(keepAccount ? 'Este dispositivo ahora tiene lo de tu cuenta.' : 'Se han juntado los dos.')
       await look()
     } catch {
       setMessage('No se pudo sincronizar. Inténtalo otra vez.')
@@ -166,15 +166,15 @@ export function Account() {
       setSession({ signedIn: false })
       setEnabled(false)
       setMine(await localCounts())
-      setMessage(wipe ? 'Has salido y este móvil se ha quedado vacío.' : 'Has salido. Lo apuntado sigue en este móvil.')
+      setMessage(wipe ? 'Has salido y este dispositivo se ha quedado vacío.' : 'Has salido. Lo apuntado sigue en este dispositivo.')
     } finally {
       setBusy(false)
     }
   }
 
   async function wipeDevice() {
-    const sure = await askConfirm('Se borra de este móvil todo lo apuntado. Seguirá guardado en tu cuenta, y volverá si vuelves a entrar.', {
-      title: '¿Borrar los datos de este móvil?',
+    const sure = await askConfirm('Se borra de este dispositivo todo lo apuntado. Seguirá guardado en tu cuenta, y volverá si vuelves a entrar.', {
+      title: '¿Borrar los datos de este dispositivo?',
       confirmLabel: 'Borrar',
       danger: true,
     })
@@ -183,7 +183,7 @@ export function Account() {
     await clearLocal()
     await look()
     setBusy(false)
-    setMessage('Este móvil se ha quedado vacío.')
+    setMessage('Este dispositivo se ha quedado vacío.')
   }
 
   async function download() {
@@ -206,7 +206,7 @@ export function Account() {
   }
 
   async function removeAccount() {
-    const sure = await askConfirm('Se borra tu cuenta del servidor, con todo lo que se haya sincronizado. Lo que tienes en este móvil se queda como está.', {
+    const sure = await askConfirm('Se borra tu cuenta del servidor, con todo lo que se haya sincronizado. Lo que tienes en este dispositivo se queda como está.', {
       title: '¿Borrar tu cuenta?',
       confirmLabel: 'Borrar',
       danger: true,
@@ -242,7 +242,7 @@ export function Account() {
       <section className="card pad">
         <h2 className="section-title">{session?.signedIn ? 'Has entrado' : 'Entrar con Google'}</h2>
         <p className="hint">
-          Con una cuenta, lo que apuntas se guarda también en el servidor y aparece en tus otros móviles. Sin ella, Bocados funciona igual pero todo se queda solo en este
+          Con una cuenta, lo que apuntas se guarda también en el servidor y aparece en tus otros dispositivos. Sin ella, Bocados funciona igual pero todo se queda solo en este
           dispositivo.
         </p>
 
@@ -296,13 +296,13 @@ export function Account() {
       )}
 
       {deciding && account && mine && (
-        <section className="card pad suggestion" aria-label="Qué hacer con los datos de este móvil">
-          <h2 className="section-title">Este móvil ya tiene datos</h2>
+        <section className="card pad suggestion" aria-label="Qué hacer con los datos de este dispositivo">
+          <h2 className="section-title">Este dispositivo ya tiene datos</h2>
           <p>
-            Tu cuenta tiene <strong>{days(account.days)} apuntados</strong>. Este móvil tiene <strong>{days(mine.days)}</strong>.
+            Tu cuenta tiene <strong>{days(account.days)} apuntados</strong>. Este dispositivo tiene <strong>{days(mine.days)}</strong>.
           </p>
           <p className="hint">
-            Si usas los de la cuenta, lo de este móvil se reemplaza (antes se descarga una copia). Si los juntas, no se pierde nada, aunque puede que algún alimento acabe repetido.
+            Si usas los de la cuenta, lo de este dispositivo se reemplaza (antes se descarga una copia). Si los juntas, no se pierde nada, aunque puede que algún alimento acabe repetido.
           </p>
           <div className="footer-row">
             <button className="btn ghost grow" onClick={() => decide(false)} disabled={busy}>
@@ -332,7 +332,7 @@ export function Account() {
           </p>
           {mine && (
             <p className="hint">
-              En este móvil: {days(mine.days)} apuntados, {mine.rows} filas en total.
+              En este dispositivo: {days(mine.days)} apuntados, {mine.rows} filas en total.
             </p>
           )}
         </section>
@@ -354,12 +354,12 @@ export function Account() {
           }
         >
           <p className="confirm-message">
-            Tu cuenta no se toca: todo lo sincronizado sigue en ella, y vuelve cuando entres otra vez. Lo que hay en este móvil puedes dejarlo o borrarlo.
+            Tu cuenta no se toca: todo lo sincronizado sigue en ella, y vuelve cuando entres otra vez. Lo que hay en este dispositivo puedes dejarlo o borrarlo.
           </p>
           <button className="btn danger-solid block" onClick={() => void signOut(true)}>
-            Salir y borrarlos de este móvil
+            Salir y borrarlos de este dispositivo
           </button>
-          <p className="hint">Bórralos si este móvil no es tuyo.</p>
+          <p className="hint">Bórralos si este dispositivo no es tuyo.</p>
         </Sheet>
       )}
 
@@ -367,7 +367,7 @@ export function Account() {
         <section className="card pad">
           <h2 className="section-title">Tus datos</h2>
           <p className="hint">
-            Puedes llevarte lo que guarda el servidor, vaciar este móvil, o borrar la cuenta entera. Qué se guarda y por qué, en la{' '}
+            Puedes llevarte lo que guarda el servidor, vaciar este dispositivo, o borrar la cuenta entera. Qué se guarda y por qué, en la{' '}
             <a href="#/privacidad">política de privacidad</a>.
           </p>
           <div className="footer-row">
@@ -375,7 +375,7 @@ export function Account() {
               Descargar
             </button>
             <button className="btn ghost grow" onClick={wipeDevice} disabled={busy || !enabled}>
-              Vaciar este móvil
+              Vaciar este dispositivo
             </button>
           </div>
           <button className="btn danger-solid block" onClick={removeAccount} disabled={busy}>
