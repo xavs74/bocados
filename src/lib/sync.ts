@@ -1,4 +1,4 @@
-import { SYNCED_TABLES, db, withoutTombstones, type SyncState } from '../db'
+import { SYNCED_TABLES, db, withoutTombstones, type BocadosDB, type SyncState } from '../db'
 
 /**
  * Syncing, from the app's side.
@@ -54,21 +54,21 @@ export type Send = (body: { since: number; items: Change[] }) => Promise<Answer>
 
 const EMPTY: SyncState = { id: 'state', cursor: 0, pushedAt: 0 }
 
-export async function syncState(): Promise<SyncState> {
-  return (await db.sync.get('state')) ?? EMPTY
+export async function syncState(database: BocadosDB = db): Promise<SyncState> {
+  return (await database.sync.get('state')) ?? EMPTY
 }
 
-export async function saveSyncState(changes: Partial<SyncState>): Promise<void> {
-  await db.sync.put({ ...(await syncState()), ...changes, id: 'state' })
+export async function saveSyncState(changes: Partial<SyncState>, database: BocadosDB = db): Promise<void> {
+  await database.sync.put({ ...(await syncState(database)), ...changes, id: 'state' })
 }
 
 /** Everything written or deleted on this device since `since`, oldest first. */
-export async function localChanges(since: number): Promise<Change[]> {
+export async function localChanges(since: number, database: BocadosDB = db): Promise<Change[]> {
   const changes: Change[] = []
 
   for (const table of SYNCED_TABLES) {
     const { kind, key } = KINDS[table]
-    const rows = (await db.table(table).toArray()) as Record<string, unknown>[]
+    const rows = (await database.table(table).toArray()) as Record<string, unknown>[]
     for (const row of rows) {
       const updatedAt = (row.updatedAt as number) ?? 0
       if (updatedAt <= since) continue
@@ -79,7 +79,7 @@ export async function localChanges(since: number): Promise<Change[]> {
     }
   }
 
-  for (const stone of await db.tombstones.where('deletedAt').above(since).toArray()) {
+  for (const stone of await database.tombstones.where('deletedAt').above(since).toArray()) {
     const table = stone.table as keyof typeof KINDS
     if (!KINDS[table]) continue
     if (KINDS[table].kind === 'setting' && LOCAL_SETTINGS.includes(stone.uid)) continue
@@ -95,7 +95,7 @@ export async function localChanges(since: number): Promise<Change[]> {
  * an older copy. Nothing applied here counts as a local change, or it would
  * bounce straight back on the next sync.
  */
-export async function applyRemote(items: Change[]): Promise<number> {
+export async function applyRemote(items: Change[], database: BocadosDB = db): Promise<number> {
   let applied = 0
 
   await withoutTombstones(async () => {
@@ -103,7 +103,7 @@ export async function applyRemote(items: Change[]): Promise<number> {
       const table = TABLE_OF[item.kind]
       if (!table) continue
       const { key } = KINDS[table]
-      const store = db.table(table)
+      const store = database.table(table)
 
       const existing = (await store.get(item.uid)) as Record<string, unknown> | undefined
       if (existing && ((existing.updatedAt as number) ?? 0) >= item.updatedAt) continue
@@ -131,15 +131,23 @@ export interface SyncResult {
  * at a time. The point reached is only written down once the work is done, so
  * an interrupted sync starts again rather than skipping what it missed.
  */
-export async function syncOnce(send: Send): Promise<SyncResult> {
-  const state = await syncState()
-  const changes = await localChanges(state.pushedAt)
-  let cursor = state.cursor
-  let received = 0
+export async function syncOnce(send: Send, database: BocadosDB = db): Promise<SyncResult> {
+  const state = await syncState(database)
 
   // Everything in this round is measured against one moment, so a change made
   // while it runs is picked up next time instead of being skipped.
   const startedAt = Date.now()
+
+  /*
+   * What has changed is worked out from the clock, so a device whose clock goes
+   * backwards would stamp its newer rows earlier than its last sync and never
+   * send them again. When that has happened, everything is sent once: the
+   * server keeps whichever copy is newer, so there is nothing to lose.
+   */
+  const since = startedAt < state.pushedAt ? 0 : state.pushedAt
+  const changes = await localChanges(since, database)
+  let cursor = state.cursor
+  let received = 0
 
   const batches: Change[][] = []
   for (let i = 0; i < changes.length; i += BATCH) batches.push(changes.slice(i, i + BATCH))
@@ -147,17 +155,23 @@ export async function syncOnce(send: Send): Promise<SyncResult> {
 
   for (const batch of batches) {
     const answer = await send({ since: cursor, items: batch })
-    received += await applyRemote(answer.items)
+    received += await applyRemote(answer.items, database)
     cursor = answer.cursor
     while (answer.more) {
       const next = await send({ since: cursor, items: [] })
-      received += await applyRemote(next.items)
+      received += await applyRemote(next.items, database)
       cursor = next.cursor
       answer.more = next.more
     }
   }
 
-  await saveSyncState({ cursor, pushedAt: startedAt, lastAt: Date.now() })
+  /*
+   * A millisecond before the round began, not the moment itself: a row written
+   * in that same millisecond, after the changes had been gathered, would
+   * otherwise count as already sent and stay on the device for ever. Sending it
+   * twice costs nothing, since the server keeps whichever copy is newer.
+   */
+  await saveSyncState({ cursor, pushedAt: startedAt - 1, lastAt: Date.now() }, database)
   return { sent: changes.length, received, cursor }
 }
 
@@ -174,17 +188,17 @@ export const post: Send = async (body) => {
 }
 
 /** How much this device holds, for deciding what happens on a first sign-in. */
-export async function localCounts(): Promise<{ days: number; rows: number }> {
-  const dates = new Set((await db.entries.toArray()).map((e) => e.date))
-  const rows = (await Promise.all(SYNCED_TABLES.map((t) => db.table(t).count()))).reduce((a, b) => a + b, 0)
+export async function localCounts(database: BocadosDB = db): Promise<{ days: number; rows: number }> {
+  const dates = new Set((await database.entries.toArray()).map((e) => e.date))
+  const rows = (await Promise.all(SYNCED_TABLES.map((t) => database.table(t).count()))).reduce((a, b) => a + b, 0)
   return { days: dates.size, rows }
 }
 
 /** Everything this device holds, for replacing it with what the account has. */
-export async function clearLocal(): Promise<void> {
+export async function clearLocal(database: BocadosDB = db): Promise<void> {
   await withoutTombstones(async () => {
-    for (const table of SYNCED_TABLES) await db.table(table).clear()
-    await db.tombstones.clear()
+    for (const table of SYNCED_TABLES) await database.table(table).clear()
+    await database.tombstones.clear()
   })
-  await saveSyncState({ cursor: 0, pushedAt: Date.now() })
+  await saveSyncState({ cursor: 0, pushedAt: Date.now() }, database)
 }

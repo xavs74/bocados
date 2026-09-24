@@ -350,33 +350,41 @@ export async function withoutTombstones<T>(fn: () => Promise<T>): Promise<T> {
  * is written once the delete has actually gone through, so a transaction that
  * rolls back cannot leave a row marked as deleted while it is still there.
  */
-for (const name of SYNCED_TABLES) {
-  const table = db.table(name)
-  const keyed = name === 'weights' || name === 'settings'
+/**
+ * Attaches those hooks to a database. The app's own is done below; the tests
+ * open more of them to play two devices against each other.
+ */
+export function attachHooks(database: BocadosDB): void {
+  for (const name of SYNCED_TABLES) {
+    const table = database.table(name)
+    const keyed = name === 'weights' || name === 'settings'
 
-  table.hook('creating', (_key, row: Record<string, unknown>) => {
-    if (!keyed && !row.id) row.id = newId()
-    if (!row.updatedAt) row.updatedAt = Date.now()
-    localWrite()
-  })
-
-  table.hook('updating', (changes) => {
-    localWrite()
-    return 'updatedAt' in (changes as Record<string, unknown>) ? undefined : { updatedAt: Date.now() }
-  })
-
-  table.hook('deleting', (key, row, transaction) => {
-    // Dexie calls this even for a key that isn't there; nothing was deleted then.
-    if (!recording || !row) return
-    const uid = String(key)
-    // The delete's own transaction covers only its table, so the mark is
-    // written once that has committed. A delete that rolls back leaves none.
-    transaction.on('complete', () => {
-      void db.tombstones.put({ id: `${name}:${uid}`, table: name, uid, deletedAt: Date.now() })
+    table.hook('creating', (_key, row: Record<string, unknown>) => {
+      if (!keyed && !row.id) row.id = newId()
+      if (!row.updatedAt) row.updatedAt = Date.now()
       localWrite()
     })
-  })
+
+    table.hook('updating', (changes) => {
+      localWrite()
+      return 'updatedAt' in (changes as Record<string, unknown>) ? undefined : { updatedAt: Date.now() }
+    })
+
+    table.hook('deleting', (key, row, transaction) => {
+      // Dexie calls this even for a key that isn't there; nothing was deleted then.
+      if (!recording || !row) return
+      const uid = String(key)
+      // The delete's own transaction covers only its table, so the mark is
+      // written once that has committed. A delete that rolls back leaves none.
+      transaction.on('complete', () => {
+        void database.tombstones.put({ id: `${name}:${uid}`, table: name, uid, deletedAt: Date.now() })
+        localWrite()
+      })
+    })
+  }
 }
+
+attachHooks(db)
 
 /**
  * Why the screens have no data. Everything is read through live queries, and a

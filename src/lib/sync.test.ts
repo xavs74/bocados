@@ -202,4 +202,33 @@ describe('deciding what to do on a first sign-in', () => {
     expect(await db.tombstones.count()).toBe(0)
     expect((await syncState()).cursor).toBe(0)
   })
+
+  it('sends everything again if the clock went backwards', async () => {
+    const { send } = server()
+    await db.foods.add(food('Pan blanco') as never)
+    await settle()
+    await syncOnce(send)
+    expect((await syncOnce(send)).sent).toBe(0)
+
+    // The device's clock jumps back a day: rows written now look older than
+    // the last sync, and would otherwise sit there unsent for ever.
+    await saveSyncState({ pushedAt: Date.now() + 24 * 60 * 60 * 1000 })
+    await db.foods.add(food('Merluza') as never)
+    await settle()
+
+    expect((await syncOnce(send)).sent).toBeGreaterThan(0)
+  })
+
+  it('does not count a row written in the same millisecond as already sent', async () => {
+    const { send } = server()
+    await syncOnce(send)
+
+    // The round marks itself done a millisecond before it began, so a row
+    // stamped at that very moment — written while it was gathering changes —
+    // is still sent next time instead of sitting here for ever.
+    const { pushedAt } = await syncState()
+    await db.foods.add({ ...food('Escrito a la vez'), updatedAt: pushedAt + 1 } as never)
+
+    expect((await syncOnce(send)).sent).toBe(1)
+  })
 })
