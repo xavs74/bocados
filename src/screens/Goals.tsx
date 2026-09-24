@@ -59,9 +59,12 @@ export function Goals() {
 
       <section className="card pad">
         <h2 className="section-title">Cuenta</h2>
-        <p className="hint">Una prueba para ver si entrar con Google funciona bien desde el móvil. Tus datos siguen guardados solo en este dispositivo.</p>
+        <p className="hint">
+          Con una cuenta, lo que apuntas aparece también en tus otros móviles. Sin ella, Bocados funciona igual y todo se queda aquí. Qué se guarda y por qué, en la{' '}
+          <a href="#/privacidad">política de privacidad</a>.
+        </p>
         <a className="btn ghost block" href="#/cuenta">
-          Probar la cuenta
+          Abrir mi cuenta
         </a>
       </section>
 

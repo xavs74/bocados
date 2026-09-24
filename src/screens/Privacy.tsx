@@ -8,14 +8,15 @@
  */
 export const POLICY_VERSION = '1'
 export const POLICY_DATE = '24 de septiembre de 2026'
-export const CONTACT = 'xavi.rag@gmail.com'
+export const CONTACT = 'help@bocados.org'
 
 export function Privacy() {
   return (
     <div className="goals privacy">
-      <a className="back-link" href="#/cuenta">
-        ‹ Cuenta
-      </a>
+      {/* Reached from Objetivos as well as from Cuenta, so it goes back rather than somewhere. */}
+      <button className="back-link" onClick={() => history.back()}>
+        ‹ Volver
+      </button>
       <div className="page-head">
         <h1>Privacidad</h1>
         <span className="muted small-text">Versión {POLICY_VERSION}</span>

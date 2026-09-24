@@ -317,6 +317,8 @@ a {
 
 /* Alimentos opens from Objetivos, so it carries its own way back. */
 .back-link {
+  border: 0;
+  background: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
